@@ -146,6 +146,30 @@ img {
   flex: 0 0 auto;
 }
 
+.brand-logo {
+  filter: drop-shadow(0 12px 24px rgba(18, 164, 211, 0.2));
+}
+
+.footer-logo-stack {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+}
+
+.footer-logo {
+  position: absolute;
+  inset: 0;
+}
+
+.footer-logo-color {
+  display: none;
+}
+
+.footer-logo-white {
+  display: block;
+}
+
 .brand-copy,
 .footer-brand strong {
   display: flex;
@@ -805,6 +829,14 @@ img {
 .footer-brand p {
   margin: 8px 0 0;
   max-width: 640px;
+}
+
+:root[data-theme="light"] .footer-logo-color {
+  display: block;
+}
+
+:root[data-theme="light"] .footer-logo-white {
+  display: none;
 }
 
 .footer-grid {

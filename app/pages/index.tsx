@@ -238,7 +238,7 @@ export default function HomePage() {
             <p>Ozlax is being built in the open with a devnet-first rollout, production-minded keeper flow, and $OZX governance in view.</p>
             <div className="community-links">
               <a href="https://discord.gg/hZ4BE84qc3" target="_blank" rel="noreferrer">Discord</a>
-              <a href="https://x.com/ozlaxfi" target="_blank" rel="noreferrer">Twitter/X</a>
+              <a href="https://x.com/OzlaxHQ" target="_blank" rel="noreferrer">Twitter/X</a>
               <a href="https://t.me/ozlaxfi" target="_blank" rel="noreferrer">Telegram</a>
             </div>
           </div>

@@ -130,7 +130,7 @@ npm run keeper
 ## Community
 
 - Discord: https://discord.gg/hZ4BE84qc3
-- Twitter/X: https://x.com/ozlaxfi
+- Twitter/X: https://x.com/OzlaxHQ
 - Telegram: https://t.me/ozlaxfi
 
 ## License

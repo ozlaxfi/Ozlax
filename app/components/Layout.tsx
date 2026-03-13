@@ -17,7 +17,7 @@ const communityLinks = [
     ),
   },
   {
-    href: cleanUrl(process.env.NEXT_PUBLIC_TWITTER, "https://x.com/ozlaxfi"),
+    href: cleanUrl(process.env.NEXT_PUBLIC_TWITTER, "https://x.com/OzlaxHQ"),
     label: "Twitter/X",
     icon: (
       <path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-6.3L6.6 22H3.5l7.3-8.4L1 2h6.3l4.3 5.7L18.9 2Zm-1.1 18h1.7L6.4 3.8H4.6L17.8 20Z" />
@@ -163,7 +163,10 @@ export default function Layout({
         <main className="page-shell">{children}</main>
         <footer className="site-footer">
           <div className="footer-brand">
-            <img src="/logo.svg" alt="Ozlax" className="footer-logo" />
+            <span className="footer-logo-stack" aria-hidden="true">
+              <img src="/logo.svg" alt="" className="footer-logo footer-logo-color" />
+              <img src="/logo-white.svg" alt="" className="footer-logo footer-logo-white" />
+            </span>
             <div>
               <strong>Ozlax</strong>
               <p>Yield routing for SOL across Marinade and Jito with keeper-managed harvests and treasury-aligned protocol fees.</p>
@@ -208,7 +211,7 @@ export default function Layout({
             </div>
           </div>
           <div className="footer-bar">
-            <span>© {new Date().getFullYear()} Ozlax. MVP build. Audit before real value.</span>
+            <span>Copyright {new Date().getFullYear()} Ozlax. MVP build. Audit before real value.</span>
             <a href="https://github.com/ozlaxfi/Ozlax" target="_blank" rel="noreferrer">
               Documentation
             </a>

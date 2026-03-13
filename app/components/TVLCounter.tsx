@@ -7,23 +7,10 @@ type Props = {
 };
 
 export default function TVLCounter({ value }: Props) {
-  const [display, setDisplay] = useState(0);
+  const [display, setDisplay] = useState(value);
 
   useEffect(() => {
-    let frame = 0;
-    const start = performance.now();
-    const duration = 1400;
-
-    const step = (timestamp: number) => {
-      const progress = Math.min((timestamp - start) / duration, 1);
-      setDisplay(value * progress);
-      if (progress < 1) {
-        frame = requestAnimationFrame(step);
-      }
-    };
-
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
+    setDisplay(value);
   }, [value]);
 
   return <strong className="tvl-value">{formatCompactNumber(display, 2)} SOL</strong>;
