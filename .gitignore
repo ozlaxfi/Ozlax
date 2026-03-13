@@ -1,0 +1,10 @@
+node_modules
+app/.next
+target
+cargo-build-bpf.exe
+cargo-build-sbf.exe
+.anchor
+.tooling
+cargo_build_proxy.obj
+solana-release-x86_64-pc-windows-msvc.tar.bz2
+%DEP%

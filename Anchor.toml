@@ -1,0 +1,15 @@
+[features]
+seeds = true
+
+[programs.devnet]
+ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
+
+[programs.mainnet]
+ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npm run test:anchor"

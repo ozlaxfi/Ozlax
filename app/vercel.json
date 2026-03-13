@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "ozlax.com"
+        }
+      ],
+      "destination": "https://www.ozlax.com/$1",
+      "permanent": true
+    }
+  ]
+}

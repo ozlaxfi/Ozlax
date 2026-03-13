@@ -1,0 +1,25 @@
+[workspace]
+members = [
+  "programs/ozlax"
+]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+
+[patch.crates-io]
+blake3 = { path = "vendor/blake3" }
+borsh = { path = "vendor/borsh" }
+borsh-derive = { path = "vendor/borsh-derive" }
+constant_time_eq = { path = "vendor/constant_time_eq" }
+indexmap = { path = "vendor/indexmap" }
+proc-macro-crate = { path = "vendor/proc-macro-crate" }
+rayon = { path = "vendor/rayon" }
+rayon-core = { path = "vendor/rayon-core" }
+toml_datetime = { path = "vendor/toml_datetime" }
+toml_edit = { path = "vendor/toml_edit" }
+toml_parser = { path = "vendor/toml_parser" }
+wasip2 = { path = "vendor/wasip2" }
+wit-bindgen = { path = "vendor/wit-bindgen" }
