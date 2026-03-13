@@ -1,9 +1,11 @@
 [features]
 seeds = true
 
+# Replace this placeholder after the first real devnet deploy.
 [programs.devnet]
 ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
 
+# Keep this aligned with the deployed upgradeable program on mainnet.
 [programs.mainnet]
 ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
 

@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
-const DEFAULT_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
+const PLACEHOLDER_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
 const MARINADE_FALLBACK_APY = 0.072;
 const JITO_FALLBACK_APY = 0.081;
 
@@ -84,7 +84,7 @@ export const getProvider = () => {
 };
 
 export const getProgram = (provider = getProvider()) => {
-  const programId = new PublicKey(process.env.PROGRAM_ID || DEFAULT_PROGRAM_ID);
+  const programId = new PublicKey(process.env.PROGRAM_ID || PLACEHOLDER_PROGRAM_ID);
   return new Program(idl, programId, provider);
 };
 
@@ -180,6 +180,12 @@ export const runHarvest = async () => {
   const totalLamports = Math.max(0, Math.floor(simulatedDailyYieldSol * 1_000_000_000));
   const marinadeLamports = Math.floor(totalLamports * (vault.marinadePct / 100));
   const jitoLamports = totalLamports - marinadeLamports;
+
+  log(
+    `Harvest simulation inputs | TVL: ${tvlSol.toFixed(6)} SOL | Marinade APY: ${(marinadeApy * 100).toFixed(2)}% | ` +
+      `Jito APY: ${(jitoApy * 100).toFixed(2)}% | Weighted APY: ${(weightedApy * 100).toFixed(2)}% | ` +
+      `Simulated harvest: ${totalLamports} lamports`,
+  );
 
   if (totalLamports === 0) {
     log("Skipping harvest because simulated yield rounded to zero lamports.");

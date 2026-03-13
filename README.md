@@ -120,6 +120,10 @@ npm run keeper
 - OZX mint + ATA: small one-time SPL costs.
 - No extra PDA fanout, no on-chain depositor loops, no oversized structs.
 
+### Why devnet deploy still needs about 3 SOL
+
+Solana program deploy cost is dominated by upgradeable loader rent, not normal transaction fees. The current `ozlax.so` footprint is about `447,776` bytes, so the temporary write buffer and final program storage both require a rent-exempt lamport balance before deploy can finish.
+
 ## Security Notes
 
 - This MVP uses simulated or keeper-reported yield inputs during harvest.

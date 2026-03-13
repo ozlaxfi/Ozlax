@@ -6,7 +6,14 @@ import { readFileSync } from "fs";
 import path from "path";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
-const DEFAULT_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
+const requireEnv = (name: string) => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} must be set before initializing the vault.`);
+  }
+
+  return value;
+};
 
 const idl = {
   version: "0.1.0",
@@ -39,23 +46,38 @@ const main = async () => {
   const rawPath = process.env.KEEPER_KEYPAIR_PATH || process.env.ANCHOR_WALLET || "~/.config/solana/id.json";
   const resolvedPath = rawPath.replace(/^~(?=\/)/, process.env.USERPROFILE || "");
   const payer = loadKeypair(resolvedPath);
-  const connection = new Connection(process.env.HELIUS_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "", "confirmed");
+  const rpcUrl = (process.env.HELIUS_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "").trim();
+  if (!rpcUrl) {
+    throw new Error("HELIUS_RPC_URL or NEXT_PUBLIC_RPC_URL must be set before initializing the vault.");
+  }
+
+  const programId = new PublicKey(requireEnv("PROGRAM_ID"));
+  const treasury = new PublicKey((process.env.TREASURY_WALLET || payer.publicKey.toBase58()).trim());
+  const ozxMint = new PublicKey((process.env.OZX_MINT || payer.publicKey.toBase58()).trim());
+  const connection = new Connection(rpcUrl, "confirmed");
   const wallet = new anchor.Wallet(payer);
   const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
   anchor.setProvider(provider);
 
   const program = new Program(
     idl,
-    new PublicKey(process.env.PROGRAM_ID || DEFAULT_PROGRAM_ID),
+    programId,
     provider,
   );
   const [vaultPda] = PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId);
 
+  console.log(`RPC URL: ${rpcUrl}`);
+  console.log(`Program ID: ${program.programId.toBase58()}`);
+  console.log(`Authority: ${payer.publicKey.toBase58()}`);
+  console.log(`Treasury: ${treasury.toBase58()}`);
+  console.log(`OZX mint: ${ozxMint.toBase58()}`);
+  console.log(`Derived vault PDA: ${vaultPda.toBase58()}`);
+
   const signature = await program.methods
     .initializeVault(
       1_000,
-      new PublicKey(process.env.TREASURY_WALLET || payer.publicKey),
-      new PublicKey(process.env.OZX_MINT || payer.publicKey),
+      treasury,
+      ozxMint,
       payer.publicKey,
       payer.publicKey,
     )
@@ -66,8 +88,15 @@ const main = async () => {
     })
     .rpc();
 
-  console.log(`Vault PDA: ${vaultPda.toBase58()}`);
   console.log(`Initialize tx: ${signature}`);
+
+  const vaultAccount = await connection.getAccountInfo(vaultPda, "confirmed");
+  if (!vaultAccount) {
+    throw new Error(`Vault PDA ${vaultPda.toBase58()} was not created.`);
+  }
+
+  console.log(`Vault account confirmed: ${vaultPda.toBase58()}`);
+  console.log(`Vault account lamports: ${vaultAccount.lamports}`);
 };
 
 main().catch((error) => {
