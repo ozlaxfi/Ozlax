@@ -1,11 +1,59 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="ozlaxGradient" x1="36" y1="40" x2="220" y2="216" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#9945FF"/>
-      <stop offset="1" stop-color="#14F195"/>
+    <linearGradient id="ozlaxGradient" x1="140" y1="72" x2="363" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C8FFF4"/>
+      <stop offset="0.28" stop-color="#8FE4ED"/>
+      <stop offset="0.68" stop-color="#52B9DC"/>
+      <stop offset="1" stop-color="#2693CD"/>
     </linearGradient>
+    <symbol id="hex" viewBox="0 0 44 38">
+      <path d="M22 1.4 41 12.3v13.4L22 36.6 3 25.7V12.3L22 1.4Z" fill="url(#ozlaxGradient)"/>
+    </symbol>
   </defs>
-  <path d="M128 22C83.265 22 47 58.265 47 103C47 126.322 56.934 147.32 72.799 162L51 194.5C47.667 199.474 51.232 206 57.193 206H120.5L143.48 172.12C138.532 173.339 133.359 174 128 174C89.893 174 59 143.107 59 105C59 66.893 89.893 36 128 36C166.107 36 197 66.893 197 105C197 126.894 186.803 146.406 170.89 159.063L192.124 191.457C217.193 172.962 234 141.557 234 106C234 59.935 196.065 22 150 22H128Z" fill="url(#ozlaxGradient)"/>
-  <path d="M197.948 59.602L134.697 154.377H198.991C204.905 154.377 208.481 160.811 205.305 165.8L173.24 216.17C170.129 221.058 162.943 221.134 159.73 216.313L109.039 140.241C106.261 136.071 106.261 130.625 109.039 126.456L182.962 15.482C186.186 10.642 193.406 10.738 196.5 15.661L213.804 43.198C217.006 48.295 213.337 55.006 207.319 55.006H203.472C201.228 55.006 199.194 56.16 197.948 58.02V59.602Z" fill="url(#ozlaxGradient)" fill-opacity="0.92"/>
-  <path d="M55.103 96.247C72.419 63.02 106.616 40.347 146.109 40.347C150.727 40.347 155.286 40.657 159.756 41.255L146.655 60.909C124.022 59.54 102.866 71.087 91.826 91.819C76.134 121.284 87.323 157.912 116.788 173.603C128.906 180.056 142.12 182.008 154.806 180.115L141.9 199.477C127.291 200.9 112.179 197.73 98.355 190.364C61.072 170.508 46.272 124.048 65.204 86.77L55.103 96.247Z" fill="url(#ozlaxGradient)" fill-opacity="0.65"/>
+  <g transform="translate(256 256)">
+    <use href="#hex" x="-22" y="-190"/>
+    <use href="#hex" x="24" y="-190"/>
+    <use href="#hex" x="70" y="-190"/>
+    <use href="#hex" x="-68" y="-152"/>
+    <use href="#hex" x="-22" y="-152"/>
+    <use href="#hex" x="24" y="-152"/>
+    <use href="#hex" x="70" y="-152"/>
+    <use href="#hex" x="116" y="-152"/>
+    <use href="#hex" x="-114" y="-114"/>
+    <use href="#hex" x="-68" y="-114"/>
+    <use href="#hex" x="116" y="-114"/>
+    <use href="#hex" x="162" y="-114"/>
+    <use href="#hex" x="-160" y="-76"/>
+    <use href="#hex" x="-114" y="-76"/>
+    <use href="#hex" x="162" y="-76"/>
+    <use href="#hex" x="208" y="-76"/>
+    <use href="#hex" x="-160" y="-30"/>
+    <use href="#hex" x="-114" y="-30"/>
+    <use href="#hex" x="162" y="-30"/>
+    <use href="#hex" x="208" y="-30"/>
+    <use href="#hex" x="-160" y="16"/>
+    <use href="#hex" x="-114" y="16"/>
+    <use href="#hex" x="162" y="16"/>
+    <use href="#hex" x="208" y="16"/>
+    <use href="#hex" x="-160" y="62"/>
+    <use href="#hex" x="-114" y="62"/>
+    <use href="#hex" x="162" y="62"/>
+    <use href="#hex" x="208" y="62"/>
+    <use href="#hex" x="-114" y="108"/>
+    <use href="#hex" x="-68" y="108"/>
+    <use href="#hex" x="116" y="108"/>
+    <use href="#hex" x="162" y="108"/>
+    <use href="#hex" x="-68" y="146"/>
+    <use href="#hex" x="-22" y="146"/>
+    <use href="#hex" x="24" y="146"/>
+    <use href="#hex" x="70" y="146"/>
+    <use href="#hex" x="-22" y="184"/>
+    <use href="#hex" x="24" y="184"/>
+    <use href="#hex" x="70" y="184"/>
+    <use href="#hex" x="-188" y="20" transform="scale(.72)"/>
+    <use href="#hex" x="302" y="20" transform="scale(.72)"/>
+    <use href="#hex" x="-86" y="238" transform="scale(.72)"/>
+    <use href="#hex" x="190" y="238" transform="scale(.72)"/>
+    <use href="#hex" x="-8" y="128"/>
+  </g>
 </svg>

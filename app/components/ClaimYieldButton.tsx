@@ -8,11 +8,15 @@ type Props = {
 
 export default function ClaimYieldButton({ onClick, loading, pendingYield }: Props) {
   return (
-    <div className="glass-panel action-card">
+    <div className="panel action-card">
       <div className="card-head">
-        <h3>Claim Yield</h3>
-        <span>{formatSol(pendingYield)} pending</span>
+        <div>
+          <span className="card-eyebrow">Rewards</span>
+          <h3>Claim Yield</h3>
+        </div>
+        <span className="card-hint">{formatSol(pendingYield)} pending</span>
       </div>
+      <p className="form-note">Claiming pays out accrued SOL without touching your staked principal.</p>
       <button type="button" disabled={loading || pendingYield <= 0} className="primary-button" onClick={() => void onClick()}>
         {loading ? "Submitting..." : "Claim Yield"}
       </button>

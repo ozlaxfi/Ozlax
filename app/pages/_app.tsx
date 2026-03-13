@@ -18,7 +18,7 @@ const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter({ network
 export default function OzlaxApp({ Component, pageProps }: AppProps) {
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets}>
         <WalletModalProvider>
           <Component {...pageProps} />
         </WalletModalProvider>

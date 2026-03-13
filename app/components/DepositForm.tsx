@@ -14,19 +14,26 @@ export default function DepositForm({ onSubmit, loading }: Props) {
   };
 
   return (
-    <form className="glass-panel action-card" onSubmit={handleSubmit}>
+    <form className="panel action-card" onSubmit={handleSubmit}>
       <div className="card-head">
-        <h3>Deposit SOL</h3>
-        <span>Min 0.01 SOL</span>
+        <div>
+          <span className="card-eyebrow">Earn</span>
+          <h3>Deposit SOL</h3>
+        </div>
+        <span className="card-hint">Min 0.01 SOL</span>
       </div>
-      <input
-        type="number"
-        min="0.01"
-        step="0.01"
-        value={amount}
-        onChange={(event) => setAmount(event.target.value)}
-        className="glass-input"
-      />
+      <label className="field-wrap">
+        <span>Amount</span>
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+          className="glass-input"
+        />
+      </label>
+      <p className="form-note">Deposits settle any pending rewards before principal increases.</p>
       <button type="submit" disabled={loading} className="primary-button">
         {loading ? "Submitting..." : "Deposit"}
       </button>

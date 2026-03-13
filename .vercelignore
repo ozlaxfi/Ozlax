@@ -1,0 +1,16 @@
+.git
+.github
+.tooling
+.anchor
+%DEP%
+target
+vendor
+node_modules
+app/.next
+app/node_modules
+keeper/node_modules
+*.log
+solana-release-x86_64-pc-windows-msvc.tar.bz2
+cargo-build-bpf.exe
+cargo-build-sbf.exe
+cargo_build_proxy.obj

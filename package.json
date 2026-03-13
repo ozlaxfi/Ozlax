@@ -6,9 +6,11 @@
     "app"
   ],
   "scripts": {
+    "build": "npm run build:app",
     "test:anchor": "anchor test --skip-build",
     "build:anchor": "anchor build",
     "build:app": "npm run build --workspace @ozlax/app",
+    "vercel-build": "npm run build --workspace @ozlax/app",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace @ozlax/app",
     "keeper": "ts-node keeper/bot.ts",
     "initialize:vault": "ts-node scripts/initialize-vault.ts"

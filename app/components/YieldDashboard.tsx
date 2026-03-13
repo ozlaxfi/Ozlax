@@ -1,5 +1,5 @@
 import { HeliusTransaction } from "../utils/helius";
-import { formatNumber, formatPercent, formatSol, shortenAddress } from "../utils/format";
+import { formatNumber, formatPercent, formatSol, formatTimestamp, shortenAddress } from "../utils/format";
 
 type Props = {
   ozlax: {
@@ -8,13 +8,14 @@ type Props = {
     pendingYield: number;
     weightedApy: number;
     tvl: number;
+    isFallback: boolean;
   };
   walletAddress: string;
   transactions: HeliusTransaction[];
 };
 
 const stat = (label: string, value: string) => (
-  <div className="stat-card glass-panel" key={label}>
+  <div className="stat-card panel" key={label}>
     <span>{label}</span>
     <strong>{value}</strong>
   </div>
@@ -28,9 +29,12 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions }: P
 
   return (
     <div className="metrics-column">
-      <div className="glass-panel wallet-card">
-        <span className="eyebrow">Connected Wallet</span>
-        <strong>{shortenAddress(walletAddress)}</strong>
+      <div className="panel wallet-card">
+        <div>
+          <span className="card-eyebrow">Connected Wallet</span>
+          <strong>{shortenAddress(walletAddress)}</strong>
+        </div>
+        <span className="status-pill">{ozlax.isFallback ? "Preview mode" : "Live state"}</span>
       </div>
       <div className="stats-grid">
         {stat("Deposited SOL", formatSol(deposited))}
@@ -40,10 +44,13 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions }: P
         {stat("TVL", formatSol(ozlax.tvl))}
         {stat("Vault Split", `${marinadePct}% / ${jitoPct}%`)}
       </div>
-      <div className="glass-panel history-card">
+      <div className="panel history-card">
         <div className="card-head">
-          <h3>Recent Helius Transactions</h3>
-          <span>{formatNumber(transactions.length)} items</span>
+          <div>
+            <span className="card-eyebrow">Activity</span>
+            <h3>Recent wallet transactions</h3>
+          </div>
+          <span className="card-hint">{formatNumber(transactions.length)} items</span>
         </div>
         <table className="history-table">
           <thead>
@@ -57,7 +64,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions }: P
             {transactions.length > 0 ? (
               transactions.map((transaction) => (
                 <tr key={transaction.signature}>
-                  <td>{new Date(transaction.timestamp * 1000).toLocaleString()}</td>
+                  <td>{formatTimestamp(transaction.timestamp)}</td>
                   <td>{transaction.description}</td>
                   <td>{formatSol(transaction.fee / 1_000_000_000)}</td>
                 </tr>

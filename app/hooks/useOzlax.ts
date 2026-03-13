@@ -8,17 +8,29 @@ import { getProgram } from "../utils/anchor";
 const MARINADE_ESTIMATED_APY = 0.072;
 const JITO_ESTIMATED_APY = 0.081;
 const ACC_PRECISION = 1_000_000_000_000n;
+const DEMO_TVL = 182.46;
+
+const demoVaultState = {
+  totalDeposited: new BN(Math.round(DEMO_TVL * LAMPORTS_PER_SOL)),
+  totalYieldHarvested: new BN(Math.round(8.12 * LAMPORTS_PER_SOL)),
+  accYieldPerShare: new BN("431125000000"),
+  feeBps: 1000,
+  marinadePct: 58,
+  jitoPct: 42,
+};
 
 export const useOzlax = () => {
   const { connection } = useConnection();
   const wallet = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [statusNote, setStatusNote] = useState("");
   const [userPosition, setUserPosition] = useState<any>(null);
   const [vaultState, setVaultState] = useState<any>(null);
   const [pendingYield, setPendingYield] = useState(0);
   const [weightedApy, setWeightedApy] = useState(0);
   const [tvl, setTvl] = useState(0);
+  const [isFallback, setIsFallback] = useState(false);
 
   const getPdas = () => {
     const program = getProgram(connection, wallet as any);
@@ -35,17 +47,29 @@ export const useOzlax = () => {
   const refresh = async () => {
     try {
       const { program, vaultPda, userPositionPda } = getPdas();
-      const nextVaultState = await program.account.vaultState.fetch(vaultPda);
+      let nextVaultState: any = demoVaultState;
+      let usingFallback = false;
+
+      try {
+        nextVaultState = await program.account.vaultState.fetch(vaultPda);
+      } catch {
+        usingFallback = true;
+      }
+
       setVaultState(nextVaultState);
       setTvl(Number(nextVaultState.totalDeposited.toString()) / LAMPORTS_PER_SOL);
+      setIsFallback(usingFallback);
+      setStatusNote(
+        usingFallback
+          ? "Vault state is not initialized on the current cluster yet. The dashboard is showing a protocol preview so the interface stays usable."
+          : "Vault state loaded from chain.",
+      );
 
       const apy =
-        (MARINADE_ESTIMATED_APY * nextVaultState.marinadePct +
-          JITO_ESTIMATED_APY * nextVaultState.jitoPct) /
-        100;
+        (MARINADE_ESTIMATED_APY * nextVaultState.marinadePct + JITO_ESTIMATED_APY * nextVaultState.jitoPct) / 100;
       setWeightedApy(apy);
 
-      if (!wallet.publicKey) {
+      if (!wallet.publicKey || usingFallback) {
         setUserPosition(null);
         setPendingYield(0);
         return;
@@ -77,6 +101,10 @@ export const useOzlax = () => {
       setError("Connect a wallet first.");
       return;
     }
+    if (isFallback) {
+      setError("The vault is not initialized on this cluster yet. Deploy and initialize it before accepting live deposits.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -104,6 +132,10 @@ export const useOzlax = () => {
       setError("Connect a wallet first.");
       return;
     }
+    if (isFallback) {
+      setError("The vault is not initialized on this cluster yet. Withdrawals are unavailable in preview mode.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -128,6 +160,10 @@ export const useOzlax = () => {
   const claimYield = async () => {
     if (!wallet.publicKey) {
       setError("Connect a wallet first.");
+      return;
+    }
+    if (isFallback) {
+      setError("The vault is not initialized on this cluster yet. Claims are unavailable in preview mode.");
       return;
     }
 
@@ -158,10 +194,12 @@ export const useOzlax = () => {
     refresh,
     loading,
     error,
+    statusNote,
     userPosition,
     vaultState,
     pendingYield,
     weightedApy,
     tvl,
+    isFallback,
   };
 };

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { formatCompactNumber } from "../utils/format";
+
 type Props = {
   value: number;
 };
@@ -24,5 +26,5 @@ export default function TVLCounter({ value }: Props) {
     return () => cancelAnimationFrame(frame);
   }, [value]);
 
-  return <strong className="tvl-value">{display.toFixed(2)} SOL</strong>;
+  return <strong className="tvl-value">{formatCompactNumber(display, 2)} SOL</strong>;
 }
