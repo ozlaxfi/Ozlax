@@ -34,8 +34,8 @@ const communityLinks = [
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard#earn", label: "Earn / Deposit" },
-  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/dashboard#earn", label: "Deposit / Earn" },
+  { href: "/#yield-aggregation", label: "How It Works" },
   { href: "/#community", label: "Community" },
   { href: "https://github.com/ozlaxfi/Ozlax", label: "Documentation", external: true },
 ];

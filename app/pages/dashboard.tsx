@@ -37,16 +37,16 @@ export default function DashboardPage() {
         <div className="dash-hero panel">
           <div>
             <span className="section-kicker">Vault dashboard</span>
-            <h1>Manage your SOL position with the same protocol view the keeper sees.</h1>
+            <h1>Track your position, vault health, and keeper-driven yield state from one DeFi surface.</h1>
             <p>
-              Track weighted APY, claim accrued rewards, review wallet activity, and see how current vault allocation is split across
-              Marinade and Jito.
+              Ozlax brings together your wallet position, protocol TVL, strategy split, reward claims, and recent wallet activity in
+              a single operator-style dashboard.
             </p>
           </div>
           <div className="hero-badges">
             <span>Reward-per-share accounting</span>
-            <span>24h keeper cadence</span>
-            <span>10% harvest fee</span>
+            <span>24 hour keeper cadence</span>
+            <span>10% protocol fee</span>
           </div>
         </div>
 
@@ -56,6 +56,11 @@ export default function DashboardPage() {
           <div className="dashboard-grid">
             <YieldDashboard ozlax={ozlax} walletAddress={wallet.publicKey?.toBase58() || ""} transactions={transactions} />
             <div className="action-column" id="earn">
+              <div className="panel action-stack-intro">
+                <span className="card-eyebrow">Earn / deposit</span>
+                <h3>Manage principal and rewards</h3>
+                <p>Deposit SOL, withdraw principal, or claim settled yield without leaving the dashboard.</p>
+              </div>
               <DepositForm onSubmit={ozlax.deposit} loading={ozlax.loading} />
               <WithdrawForm onSubmit={ozlax.withdraw} loading={ozlax.loading} />
               <ClaimYieldButton onClick={ozlax.claimYield} loading={ozlax.loading} pendingYield={ozlax.pendingYield} />
@@ -66,7 +71,7 @@ export default function DashboardPage() {
           <div className="empty-card panel">
             <span className="section-kicker">Wallet required</span>
             <h2>Connect a Solana wallet to read your position.</h2>
-            <p>The dashboard will fetch your `UserPosition` PDA and recent Helius activity once a wallet is connected.</p>
+            <p>The dashboard will fetch your UserPosition PDA and recent Helius activity once a wallet is connected.</p>
           </div>
         )}
       </section>
