@@ -10,7 +10,7 @@ export const formatCompactNumber = (value: number, maximumFractionDigits = 1) =>
 
 export const formatSol = (value?: number | null, fractionDigits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "Unavailable";
+    return "Pending sync";
   }
 
   return `${value.toFixed(fractionDigits)} SOL`;
@@ -18,7 +18,7 @@ export const formatSol = (value?: number | null, fractionDigits = 4) => {
 
 export const formatCompactSol = (value?: number | null, fractionDigits = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "Unavailable";
+    return "Pending sync";
   }
 
   return `${formatCompactNumber(value, fractionDigits)} SOL`;
@@ -26,7 +26,7 @@ export const formatCompactSol = (value?: number | null, fractionDigits = 2) => {
 
 export const formatPercent = (value?: number | null, fractionDigits = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "Unavailable";
+    return "Pending sync";
   }
 
   return `${(value * 100).toFixed(fractionDigits)}%`;
@@ -34,7 +34,7 @@ export const formatPercent = (value?: number | null, fractionDigits = 2) => {
 
 export const formatWholePercent = (value?: number | null) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "Unavailable";
+    return "Pending sync";
   }
 
   return `${value}%`;
@@ -42,7 +42,7 @@ export const formatWholePercent = (value?: number | null) => {
 
 export const formatTimestamp = (value?: number | null) => {
   if (!value) {
-    return "Unavailable";
+    return "Waiting for sync";
   }
 
   return new Date(value * 1000).toLocaleString();
@@ -50,7 +50,7 @@ export const formatTimestamp = (value?: number | null) => {
 
 export const formatSlot = (value?: number | null) => {
   if (!value) {
-    return "Not tracked";
+    return "Waiting for sync";
   }
 
   return `Slot ${formatNumber(value)}`;

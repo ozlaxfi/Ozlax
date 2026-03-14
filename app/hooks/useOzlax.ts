@@ -47,7 +47,7 @@ const describeError = (error: unknown) => {
     return "That withdrawal is larger than your deposited balance.";
   }
   if (message.includes("NoYieldAvailable")) {
-    return "There is no yield available to claim right now.";
+    return "There is nothing ready to claim right now.";
   }
   if (message.includes("WalletSignTransactionError")) {
     return "The transaction was cancelled in your wallet.";
@@ -106,8 +106,8 @@ export const useOzlax = () => {
         setTvl(null);
         setWeightedApy(null);
         setIsPreview(true);
-        setPreviewReason("This RPC endpoint does not expose a live Ozlax vault yet.");
-        setStatusNote("Vault state is not available on the current RPC endpoint yet.");
+        setPreviewReason("The selected RPC is not serving a live Ozlax vault right now.");
+        setStatusNote("Switch to the network where Ozlax is deployed if you want live vault state and transactions.");
         setUserPosition(null);
         setPendingYield(0);
       } else {
@@ -150,7 +150,7 @@ export const useOzlax = () => {
       }
     } catch (refreshError) {
       setError(describeError(refreshError));
-      setStatusNote("The frontend could not read current vault state from the selected RPC endpoint.");
+      setStatusNote("Ozlax could not read vault state from the selected RPC. Check the network and try again.");
       setIsPreview(true);
       setPreviewReason("The selected RPC is not returning live Ozlax state right now.");
       setVaultState(null);
@@ -173,7 +173,7 @@ export const useOzlax = () => {
       return "Connect a wallet to interact with the vault.";
     }
     if (isPreview || !vaultState) {
-      return "Preview mode is active because the current RPC is not exposing a live Ozlax vault.";
+      return "Switch to the network where Ozlax is deployed if you want to interact with the live vault.";
     }
 
     return null;
@@ -267,7 +267,7 @@ export const useOzlax = () => {
       return { ok: false, message: blocker };
     }
     if (pendingYield <= 0) {
-      const message = "There is no yield available to claim right now.";
+      const message = "There is nothing ready to claim right now.";
       setError(message);
       return { ok: false, message };
     }

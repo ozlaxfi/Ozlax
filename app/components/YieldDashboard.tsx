@@ -88,7 +88,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
               </div>
               <div>
                 <span>Connected wallet</span>
-                <strong>{walletAddress ? shortenAddress(walletAddress) : "Preview only"}</strong>
+                <strong>{walletAddress ? shortenAddress(walletAddress) : "Connect wallet"}</strong>
               </div>
             </div>
 
@@ -156,7 +156,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                     <td colSpan={4} className="table-empty">
                       {heliusConfigured
                         ? activityMessage || "No recent transactions were returned for this wallet yet."
-                        : "Set NEXT_PUBLIC_HELIUS_API_KEY if you want this dashboard to show recent Helius activity."}
+                        : "Add a Helius API key if you want this dashboard to show recent wallet activity."}
                     </td>
                   </tr>
                 )}

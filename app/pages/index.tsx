@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 
 import FeatureCard from "../components/FeatureCard";
 import Layout from "../components/Layout";
+import { SOCIAL_LINKS, SocialIcon } from "../components/SocialIcons";
 import TVLCounter from "../components/TVLCounter";
 import { useOzlax } from "../hooks/useOzlax";
 import { formatPercent, formatWholePercent } from "../utils/format";
@@ -122,37 +122,6 @@ const credibilityParagraphs = [
   "The protocol is being run devnet-first because that is the right tradeoff for a system that is still earning its production history. The architecture is already shaped for mainnet, but the rollout stays disciplined.",
 ];
 
-const communityLinks = [
-  {
-    href: process.env.NEXT_PUBLIC_DISCORD || "https://discord.gg/hZ4BE84qc3",
-    label: "Discord",
-    description: "Join the builder channel and track live protocol progress as new vault milestones land.",
-    icon: (
-      <path d="M20.3 5.5A16.7 16.7 0 0 0 16.2 4a11.6 11.6 0 0 0-.5 1l-.2.5a15.4 15.4 0 0 0-7 0l-.2-.5c-.2-.4-.3-.7-.5-1A16.7 16.7 0 0 0 3.7 5.5 18.4 18.4 0 0 0 1 17.8a16.9 16.9 0 0 0 5 2.5l1.1-1.8a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.4 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.8a16.9 16.9 0 0 0 5-2.5 18.4 18.4 0 0 0-2.7-12.3ZM8.2 15.4c-.9 0-1.6-.8-1.6-1.8S7.3 12 8.2 12s1.7.8 1.6 1.7c0 1-.7 1.8-1.6 1.8Zm7.6 0c-.9 0-1.6-.8-1.6-1.8S14.9 12 15.8 12s1.7.8 1.6 1.7c0 1-.7 1.8-1.6 1.8Z" />
-    ),
-  },
-  {
-    href: process.env.NEXT_PUBLIC_TWITTER || "https://x.com/OzlaxHQ",
-    label: "X",
-    description: "Follow the public build log, deployment milestones, and protocol updates in real time.",
-    icon: <path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-6.3L6.6 22H3.5l7.3-8.4L1 2h6.3l4.3 5.7L18.9 2Zm-1.1 18h1.7L6.4 3.8H4.6L17.8 20Z" />,
-  },
-  {
-    href: process.env.NEXT_PUBLIC_TELEGRAM || "https://t.me/ozlaxfi",
-    label: "Telegram",
-    description: "Keep up with the community conversation and the next release window from your phone.",
-    icon: <path d="m21.9 4.4-3.2 15.1c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.6.6-1.1.6l.4-5.1 9.4-8.5c.4-.3-.1-.5-.6-.1L6.1 13.1l-4.8-1.5c-1-.3-1-.9.2-1.4l18.7-7.2c.9-.3 1.7.2 1.4 1.4Z" />,
-  },
-];
-
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="community-icon">
-      {children}
-    </svg>
-  );
-}
-
 export default function HomePage() {
   const ozlax = useOzlax();
   const marinadeAllocation = ozlax.vaultState?.marinadePct ?? strategyCards[0].allocation;
@@ -163,10 +132,7 @@ export default function HomePage() {
       <section className="page-section home-page">
         <section className="home-hero">
           <div className="glass-card hero-content">
-            <div className="hero-mark">
-              <img src="/logo.svg" alt="Ozlax" className="hero-logo" />
-              <span className="section-kicker">Micro-staking yield aggregator</span>
-            </div>
+            <span className="section-kicker">Micro-staking yield aggregator</span>
 
             <div>
               <h1>Micro-Staking Yield Aggregator on Solana</h1>
@@ -189,7 +155,7 @@ export default function HomePage() {
               <article className="glass-card hero-metric">
                 <span>Protocol TVL</span>
                 <TVLCounter value={ozlax.tvl} />
-                <p>{ozlax.isPreview ? "Vault TVL will appear here as soon as the selected RPC exposes live state." : "Live vault TVL pulled from the current RPC."}</p>
+                <p>{ozlax.isPreview ? "Switch to the live Ozlax network and the vault total will load here." : "Live vault TVL pulled from the current RPC."}</p>
               </article>
               <article className="glass-card hero-metric">
                 <span>Weighted APY</span>
@@ -206,9 +172,28 @@ export default function HomePage() {
 
           <div className="glass-card hero-visual">
             <div className="protocol-orbit">
-              <span className="protocol-node protocol-node-a">Marinade</span>
-              <span className="protocol-core">Ozlax Vault</span>
-              <span className="protocol-node protocol-node-b">Jito</span>
+              <span className="protocol-flow-badge protocol-flow-badge-left">Deposit SOL</span>
+              <a
+                href="https://marinade.finance"
+                target="_blank"
+                rel="noreferrer"
+                className="protocol-node protocol-node-a protocol-partner-link"
+              >
+                Marinade
+              </a>
+              <a href="https://www.ozlax.com" target="_blank" rel="noreferrer" className="protocol-core protocol-core-link">
+                <img src="/logo.svg" alt="Ozlax Vault" className="protocol-core-logo" />
+                <span>Ozlax Vault</span>
+              </a>
+              <a
+                href="https://www.jito.network"
+                target="_blank"
+                rel="noreferrer"
+                className="protocol-node protocol-node-b protocol-partner-link"
+              >
+                Jito
+              </a>
+              <span className="protocol-flow-badge protocol-flow-badge-right">Yield returns to depositors</span>
             </div>
 
             <div className="protocol-summary">
@@ -462,14 +447,16 @@ export default function HomePage() {
           </div>
 
           <div className="community-icon-grid">
-            {communityLinks.map((item) => (
-              <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="community-link-card">
-                <Icon>{item.icon}</Icon>
+            {SOCIAL_LINKS.map((item) => (
+              <article key={item.label} className="community-link-card">
+                <a href={item.href} target="_blank" rel="noreferrer" className="community-link-icon" aria-label={item.label}>
+                  <SocialIcon label={item.label} />
+                </a>
                 <div>
                   <strong>{item.label}</strong>
                   <p>{item.description}</p>
                 </div>
-              </a>
+              </article>
             ))}
           </div>
         </section>

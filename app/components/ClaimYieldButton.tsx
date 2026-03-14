@@ -40,7 +40,7 @@ export default function ClaimYieldButton({ onClick, loading, pendingYield, disab
         className="button-primary button-block"
         onClick={() => void handleClick()}
       >
-        {loading ? "Claiming..." : pendingYield > 0 ? `Claim ${formatSol(pendingYield)}` : "No Yield Available"}
+        {loading ? "Claiming..." : pendingYield > 0 ? `Claim ${formatSol(pendingYield)}` : "Nothing to claim yet"}
       </button>
     </div>
   );

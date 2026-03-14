@@ -5,6 +5,7 @@ import ClaimYieldButton from "../components/ClaimYieldButton";
 import ConnectWallet from "../components/ConnectWallet";
 import DepositForm from "../components/DepositForm";
 import Layout from "../components/Layout";
+import SettingsPanel from "../components/SettingsPanel";
 import WithdrawForm from "../components/WithdrawForm";
 import YieldDashboard from "../components/YieldDashboard";
 import { useOzlax } from "../hooks/useOzlax";
@@ -20,19 +21,19 @@ export default function DashboardPage() {
     const loadTransactions = async () => {
       if (!wallet.publicKey) {
         setTransactions([]);
-        setActivityMessage("Connect a wallet to view recent Helius activity.");
+        setActivityMessage("Connect your wallet to see the most recent activity tied to this address.");
         return;
       }
 
       if (!isHeliusConfigured()) {
         setTransactions([]);
-        setActivityMessage("Helius activity is disabled until NEXT_PUBLIC_HELIUS_API_KEY is configured.");
+        setActivityMessage("Add a Helius API key if you want wallet history to appear here.");
         return;
       }
 
       const items = await fetchWalletTransactions(wallet.publicKey.toBase58());
       setTransactions(items.slice(0, 5));
-      setActivityMessage(items.length ? "" : "No recent transactions were returned for this wallet.");
+      setActivityMessage(items.length ? "" : "No recent transactions have shown up for this wallet yet.");
     };
 
     void loadTransactions();
@@ -65,11 +66,11 @@ export default function DashboardPage() {
 
         {(!wallet.connected || ozlax.isPreview) && (
           <div className="preview-banner">
-            <strong>Preview Mode</strong>
+            <strong>Network view</strong>
             <span>
               {wallet.connected
-                ? ozlax.previewReason || "You are connected, but this RPC is not exposing a live Ozlax vault yet."
-                : "Connect a devnet wallet to move from preview into the live vault interface."}
+                ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not serving a live Ozlax vault."
+                : "Connect a wallet on devnet to move straight into the live Ozlax interface."}
             </span>
           </div>
         )}
@@ -79,8 +80,8 @@ export default function DashboardPage() {
             <span className="card-eyebrow">Wallet connection</span>
             <h2>Connect a Solana wallet to load your live Ozlax position.</h2>
             <p>
-              The dashboard stays visible so you can inspect the vault layout, but deposits, withdrawals, and claims stay disabled
-              until a wallet is connected to a live network the protocol can read.
+              The dashboard is ready to use. Once your wallet is connected on the right network, Ozlax can read your position and send
+              real deposit, withdrawal, and claim transactions through the vault.
             </p>
             <ConnectWallet className="wallet-button-large" />
           </div>
@@ -117,6 +118,8 @@ export default function DashboardPage() {
             disabled={actionsDisabled}
           />
         </div>
+
+        <SettingsPanel walletAddress={wallet.publicKey?.toBase58()} />
       </section>
     </Layout>
   );

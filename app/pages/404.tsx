@@ -7,7 +7,6 @@ export default function NotFoundPage() {
     <Layout title="Ozlax | Page Not Found" description="The requested Ozlax page could not be found.">
       <section className="page-section">
         <div className="glass-card not-found-shell">
-          <img src="/logo.svg" alt="Ozlax" className="not-found-logo" />
           <span className="section-kicker">404</span>
           <h1>Page Not Found</h1>
           <p>The page you were looking for is not part of the current Ozlax site map. Head back to the main interface and we will get you moving again.</p>
