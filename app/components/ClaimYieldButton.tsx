@@ -41,6 +41,7 @@ export default function ClaimYieldButton({ onClick, loading, pendingYield, disab
       <p className="form-note">
         Claiming pays out your accrued SOL rewards without reducing your deposited principal in the vault.
       </p>
+      <p className="form-inline-hint">Claimable now: {formatSol(pendingYield)}.</p>
       {claimedAmount ? <p className="form-note">Your most recent claim request covered {formatSol(claimedAmount)}.</p> : null}
 
       <button

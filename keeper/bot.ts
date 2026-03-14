@@ -11,6 +11,8 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 const PLACEHOLDER_PROGRAM_ID = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx";
 const MARINADE_FALLBACK_APY = 0.072;
 const JITO_FALLBACK_APY = 0.081;
+const ONCE_MODE = process.argv.includes("--once");
+const DRY_RUN_MODE = process.argv.includes("--dry-run");
 
 const requireEnv = (name: string, fallback?: string) => {
   const value = process.env[name]?.trim() || fallback?.trim();
@@ -170,7 +172,25 @@ export const notifyDiscord = async (content: string) => {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const runHarvest = async () => {
+const classifyKeeperError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (/EmptyVault|NoYieldAvailable|InvalidAmount/i.test(message)) {
+    return { message, retryable: false, skip: true };
+  }
+
+  if (
+    /429|timeout|timed out|ECONNRESET|ENOTFOUND|failed to fetch|NetworkError|blockhash|Node is behind|fetch failed/i.test(
+      message,
+    )
+  ) {
+    return { message, retryable: true, skip: false };
+  }
+
+  return { message, retryable: false, skip: false };
+};
+
+export const runHarvest = async ({ dryRun = false }: { dryRun?: boolean } = {}) => {
   const provider = getProvider();
   const program = getProgram(provider);
   const { vaultPda, vault } = await fetchVaultState(program);
@@ -202,6 +222,13 @@ export const runHarvest = async () => {
     return;
   }
 
+  if (dryRun) {
+    log(
+      `Dry run complete | Marinade: ${marinadeLamports} lamports | Jito: ${jitoLamports} lamports | Treasury: ${vault.treasury.toBase58()}`,
+    );
+    return;
+  }
+
   let lastError: Error | null = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
@@ -225,11 +252,20 @@ export const runHarvest = async () => {
       await notifyDiscord(message);
       return;
     } catch (error) {
-      lastError = error as Error;
-      log(`Harvest attempt ${attempt} failed. ${lastError.message}`);
-      if (attempt < 3) {
-        await sleep(5_000);
+      const classified = classifyKeeperError(error);
+      if (classified.skip) {
+        log(`Skipping harvest. ${classified.message}`);
+        return;
       }
+
+      lastError = error as Error;
+      log(`Harvest attempt ${attempt} failed. ${classified.message}`);
+      if (classified.retryable && attempt < 3) {
+        await sleep(5_000);
+        continue;
+      }
+
+      throw lastError;
     }
   }
 
@@ -245,14 +281,20 @@ export const main = async () => {
   log(`Keeper authority: ${provider.wallet.publicKey.toBase58()}`);
   log(`Keeper program ID: ${program.programId.toBase58()}`);
   log(`Keeper vault PDA: ${vaultPda.toBase58()}`);
-  log("Keeper harvest mode: APY-fetched daily simulation with protocol fee applied on-chain.");
+  log(`Keeper harvest mode: APY-fetched daily simulation${DRY_RUN_MODE ? " (dry run)" : ""}.`);
+
+  if (ONCE_MODE) {
+    await runHarvest({ dryRun: DRY_RUN_MODE });
+    log("Keeper single-run mode complete.");
+    return;
+  }
 
   cron.schedule("0 0 * * *", async () => {
-    await runHarvest();
+    await runHarvest({ dryRun: DRY_RUN_MODE });
   });
 
   log("Ozlax keeper started on a 24h schedule.");
-  await runHarvest();
+  await runHarvest({ dryRun: DRY_RUN_MODE });
 };
 
 main().catch((error) => {

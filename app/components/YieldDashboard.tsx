@@ -154,9 +154,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                 ) : (
                   <tr>
                     <td colSpan={4} className="table-empty">
-                      {heliusConfigured
-                        ? activityMessage || "No recent transactions were returned for this wallet yet."
-                        : "Add a Helius API key and recent wallet activity will appear here."}
+                      {heliusConfigured ? activityMessage || "No recent activity." : "Transaction history requires a Helius API key."}
                     </td>
                   </tr>
                 )}

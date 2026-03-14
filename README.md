@@ -15,21 +15,15 @@ This is an MVP and should be audited before it holds real value.
 
 ## How It Works
 
-1. Users deposit SOL into one program-owned vault PDA.
-2. The vault keeps cumulative accounting with `acc_yield_per_share`.
-3. A keeper calls `harvest_yield` with realized or simulated Marinade/Jito yield.
-4. The program takes `fee_bps` from harvested yield and moves it to treasury.
-5. Users claim yield on demand or get settled automatically on deposit and withdraw.
+Users deposit SOL into one program-owned vault PDA. The vault keeps cumulative accounting with `acc_yield_per_share`, a keeper calls `harvest_yield` with realized or simulated Marinade and Jito yield, and the program routes `fee_bps` from harvested yield to treasury before depositors claim or settle rewards through their own actions.
 
-The contract never loops across all depositors on-chain. Reward distribution is O(1) per user action.
+The contract never loops across all depositors on-chain. Reward distribution stays O(1) per user action.
 
 ## Architecture Notes
 
-- One program and one global vault PDA keeps rent and deployment cost low.
-- User accounting uses a reward-debt pattern similar to farm contracts, adapted for SOL.
-- SOL stays in the vault PDA in this MVP so devnet flows and testing stay simple.
-- Keeper APY collection uses SDK-first lookups with API/static fallbacks because current SDK versions do not expose a stable cross-provider APY API surface.
-- The frontend reads state directly from Anchor accounts and uses Helius for recent wallet activity.
+One program and one global vault PDA keep rent and deployment cost low. User accounting uses a reward-debt pattern adapted for SOL, and SOL stays in the vault PDA in this MVP so devnet flows and testing stay simple.
+
+Keeper APY collection uses SDK-first lookups with API and static fallbacks because current SDK versions do not expose a stable cross-provider APY surface. The frontend reads state directly from Anchor accounts, supports Phantom, Solflare, Coinbase, and wallet-standard auto-detection, and uses toast notifications plus Helius-backed recent wallet activity when an API key is present.
 
 ## Tech Stack
 
@@ -92,6 +86,8 @@ anchor build
 anchor test --skip-build
 ```
 
+The integration suite now covers 16 end-to-end cases, including multi-user reward distribution, repeated harvest accumulation, and full-withdraw edge cases.
+
 ### 6. Start the frontend
 
 ```bash
@@ -104,6 +100,16 @@ npm run dev --workspace @ozlax/app
 ```bash
 npm run keeper
 ```
+
+You can also run a single keeper cycle with `npm run keeper -- --once`, or inspect the computed harvest without sending a transaction with `npm run keeper -- --once --dry-run`.
+
+### 8. Mint the OZX token
+
+```bash
+bash scripts/deploy-token.sh
+```
+
+That script creates the 9-decimal OZX mint, mints the fixed one billion supply, and revokes mint authority once distribution is complete.
 
 ## Deploy to Mainnet (One Config Change)
 
@@ -134,9 +140,9 @@ Solana program deploy cost is dominated by upgradeable loader rent, not normal t
 
 ## Community
 
-- Discord: https://discord.gg/hZ4BE84qc3
-- Twitter/X: https://x.com/OzlaxHQ
-- Telegram: https://t.me/ozlaxfi
+Discord: https://discord.gg/hZ4BE84qc3  
+Twitter/X: https://x.com/OzlaxHQ  
+Telegram: https://t.me/ozlaxfi
 
 ## License
 

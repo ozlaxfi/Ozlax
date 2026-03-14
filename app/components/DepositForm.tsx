@@ -14,16 +14,29 @@ type Props = {
 export default function DepositForm({ onSubmit, loading, disabled, walletBalance }: Props) {
   const [amount, setAmount] = useState("");
   const { showToast } = useToast();
+  const parsedAmount = Number(amount);
+  const hasAmount = amount.trim().length > 0;
+  const exceedsBalance = walletBalance !== null && walletBalance !== undefined && parsedAmount > walletBalance;
+  const isValidAmount = hasAmount && Number.isFinite(parsedAmount) && parsedAmount >= 0.01 && !exceedsBalance;
+  const submitDisabled = disabled || loading || !isValidAmount;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const parsedAmount = Number(amount);
 
     if (!Number.isFinite(parsedAmount) || parsedAmount < 0.01) {
       showToast({
         tone: "error",
         title: "Deposit blocked",
         message: "Enter at least 0.01 SOL before sending the transaction.",
+      });
+      return;
+    }
+
+    if (exceedsBalance) {
+      showToast({
+        tone: "error",
+        title: "Deposit blocked",
+        message: "That amount is larger than the SOL currently in your connected wallet.",
       });
       return;
     }
@@ -73,6 +86,13 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
             Max
           </button>
         </div>
+        <p className="form-inline-hint">
+          {hasAmount && !isValidAmount
+            ? exceedsBalance
+              ? "That deposit is larger than your wallet balance."
+              : "Enter at least 0.01 SOL."
+            : "Min 0.01 SOL. Use Max to fill the field with your connected wallet balance."}
+        </p>
       </label>
 
       <div className="form-meta">
@@ -82,7 +102,7 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
 
       <p className="form-note">Depositing settles pending rewards first, then increases your principal balance.</p>
 
-      <button type="submit" disabled={disabled || loading} className="button-primary button-block">
+      <button type="submit" disabled={submitDisabled} className="button-primary button-block">
         {loading ? "Depositing..." : "Deposit SOL"}
       </button>
     </form>

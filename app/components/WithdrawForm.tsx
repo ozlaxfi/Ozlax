@@ -14,10 +14,14 @@ type Props = {
 export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }: Props) {
   const [amount, setAmount] = useState("");
   const { showToast } = useToast();
+  const parsedAmount = Number(amount);
+  const hasAmount = amount.trim().length > 0;
+  const exceedsMax = maxAmount !== null && maxAmount !== undefined && parsedAmount > maxAmount;
+  const isValidAmount = hasAmount && Number.isFinite(parsedAmount) && parsedAmount > 0 && !exceedsMax;
+  const submitDisabled = disabled || loading || !isValidAmount;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const parsedAmount = Number(amount);
 
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       showToast({
@@ -82,6 +86,13 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
             Max
           </button>
         </div>
+        <p className="form-inline-hint">
+          {hasAmount && !isValidAmount
+            ? exceedsMax
+              ? "That withdrawal is larger than the SOL you have deposited."
+              : "Enter a positive withdrawal amount."
+            : `Max available: ${formatSol(maxAmount)}.`}
+        </p>
       </label>
 
       <div className="form-meta">
@@ -91,7 +102,7 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
 
       <p className="form-note">Withdrawals settle pending rewards first, then reduce your deposited SOL position.</p>
 
-      <button type="submit" disabled={disabled || loading} className="button-secondary button-block">
+      <button type="submit" disabled={submitDisabled} className="button-secondary button-block">
         {loading ? "Withdrawing..." : "Withdraw SOL"}
       </button>
     </form>

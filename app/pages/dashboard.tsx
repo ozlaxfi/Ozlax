@@ -27,13 +27,13 @@ export default function DashboardPage() {
 
       if (!isHeliusConfigured()) {
         setTransactions([]);
-        setActivityMessage("Add a Helius API key and recent wallet history will appear here.");
+        setActivityMessage("Transaction history requires a Helius API key.");
         return;
       }
 
       const items = await fetchWalletTransactions(wallet.publicKey.toBase58());
       setTransactions(items.slice(0, 5));
-      setActivityMessage(items.length ? "" : "Recent wallet activity will appear here once this address starts interacting on chain.");
+      setActivityMessage(items.length ? "" : "No recent activity.");
     };
 
     void loadTransactions();

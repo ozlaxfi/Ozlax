@@ -30,6 +30,8 @@ pub mod ozlax {
         vault.marinade_pct = 50;
         vault.jito_pct = 50;
         vault.bump = ctx.bumps.vault;
+        // Stored for future governance gating. A later version could validate OZX holdings
+        // without changing the current vault accounting model.
         vault.ozx_mint = ozx_mint;
         vault.marinade_stake_account = marinade_stake_account;
         vault.jito_stake_account = jito_stake_account;

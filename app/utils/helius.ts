@@ -19,6 +19,35 @@ const isMainnet =
 const explorerUrlFor = (signature: string) =>
   `https://explorer.solana.com/tx/${signature}${isMainnet ? "" : "?cluster=devnet"}`;
 
+const humanizeType = (transaction: any) => {
+  const rawType = String(transaction?.type || "").toUpperCase();
+  const description = String(transaction?.description || "");
+
+  if (rawType.includes("TRANSFER")) {
+    return "Transfer";
+  }
+  if (rawType.includes("SWAP")) {
+    return "Swap";
+  }
+  if (rawType.includes("STAKE")) {
+    return "Stake";
+  }
+  if (rawType.includes("NFT")) {
+    return "NFT";
+  }
+  if (description.toLowerCase().includes("claim")) {
+    return "Claim";
+  }
+  if (description.toLowerCase().includes("deposit")) {
+    return "Deposit";
+  }
+  if (description.toLowerCase().includes("withdraw")) {
+    return "Withdraw";
+  }
+
+  return "Activity";
+};
+
 const toAmount = (address: string, transaction: any) => {
   const nativeTransfers = Array.isArray(transaction?.nativeTransfers) ? transaction.nativeTransfers : [];
   const relevantTransfer = nativeTransfers.find(
@@ -55,7 +84,7 @@ export const fetchWalletTransactions = async (address: string): Promise<HeliusTr
 
     return (response.data || []).map((transaction: any) => ({
       signature: transaction.signature,
-      type: transaction.type || "Activity",
+      type: humanizeType(transaction),
       description: transaction.description || transaction.type || "Solana transaction",
       amount: toAmount(address, transaction),
       timestamp: transaction.timestamp || 0,
