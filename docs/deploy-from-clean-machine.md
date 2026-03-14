@@ -13,6 +13,8 @@ bash scripts/setup-dev-env.sh
 npm install
 ```
 
+If you are using WSL, run these commands inside the Linux distro, not from PowerShell.
+
 ## 2. Fund a devnet wallet
 
 Choose a dedicated devnet signer and fund it with at least the current deploy threshold plus a small buffer.
@@ -29,6 +31,8 @@ solana balance <DEPLOY_WALLET> --url devnet
 solana-test-validator --reset
 anchor test
 ```
+
+This bypasses the Windows `solana-test-validator` privilege error because the validator is running under Linux instead of the host Windows process model.
 
 ## 4. Deploy to devnet
 
@@ -91,3 +95,4 @@ Confirm:
 - dashboard loads with devnet config
 - vault fallback disappears after initialization
 - keeper has `PROGRAM_ID`, `HELIUS_RPC_URL`, `KEEPER_KEYPAIR_PATH`, and `DISCORD_WEBHOOK_URL` set before running
+- use `docs/pre-deploy-checklist.md` as the final go/no-go list before a real deploy

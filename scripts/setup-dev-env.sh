@@ -4,9 +4,15 @@ set -euo pipefail
 SOLANA_VERSION="1.18.26"
 ANCHOR_VERSION="0.29.0"
 NODE_MAJOR="20"
+APT_PREREQS=(curl git build-essential pkg-config libssl-dev libudev-dev clang cmake)
 
 command_exists() {
   command -v "$1" >/dev/null 2>&1
+}
+
+section() {
+  echo
+  echo "== $1 =="
 }
 
 run_as_root() {
@@ -19,6 +25,34 @@ run_as_root() {
 
 ensure_path_exports() {
   export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
+}
+
+install_system_prereqs() {
+  if ! command_exists apt-get; then
+    for tool in curl git; do
+      if ! command_exists "$tool"; then
+        echo "$tool is required before running this script on non-apt systems." >&2
+        exit 1
+      fi
+    done
+    return
+  fi
+
+  local missing=()
+  for pkg in "${APT_PREREQS[@]}"; do
+    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+      missing+=("$pkg")
+    fi
+  done
+
+  if (( ${#missing[@]} == 0 )); then
+    echo "System prerequisites already installed."
+    return
+  fi
+
+  echo "Installing system prerequisites: ${missing[*]}"
+  run_as_root apt-get update
+  run_as_root apt-get install -y "${missing[@]}"
 }
 
 install_rust() {
@@ -90,11 +124,10 @@ install_tsx() {
 }
 
 main() {
-  if ! command_exists curl; then
-    echo "curl is required before running this script." >&2
-    exit 1
-  fi
+  section "System prerequisites"
+  install_system_prereqs
 
+  section "Rust"
   install_rust
   ensure_path_exports
 
@@ -102,7 +135,10 @@ main() {
   rustup component add rustfmt clippy >/dev/null
   rustup target add x86_64-unknown-linux-gnu >/dev/null || true
 
+  section "Node"
   install_node
+
+  section "Solana"
   install_solana
   ensure_path_exports
 
@@ -111,9 +147,13 @@ main() {
     exit 1
   fi
 
+  section "Anchor"
   install_anchor
+
+  section "tsx"
   install_tsx
 
+  section "Installed versions"
   echo "Toolchain ready:"
   echo "  Rust:    $(rustc --version)"
   echo "  Cargo:   $(cargo --version)"

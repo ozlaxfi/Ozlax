@@ -4,26 +4,33 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+section() {
+  echo
+  echo "== $1 =="
+}
+
+fail() {
+  echo "Error: $1" >&2
+  exit 1
+}
+
 require_env() {
   local name="$1"
   local value="${!name:-}"
   if [[ -z "${value// }" ]]; then
-    echo "$name must be set before running deploy-devnet.sh" >&2
-    exit 1
+    fail "$name must be set before running deploy-devnet.sh"
   fi
 }
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "$1 is required before running deploy-devnet.sh" >&2
-    exit 1
+    fail "$1 is required before running deploy-devnet.sh"
   fi
 }
 
 require_file() {
   if [[ ! -f "$1" ]]; then
-    echo "Required file not found: $1" >&2
-    exit 1
+    fail "Required file not found: $1"
   fi
 }
 
@@ -37,18 +44,22 @@ require_command solana-keygen
 require_command anchor
 require_command node
 require_command npm
-require_command npx
+require_command tsx
 
 require_file "$ANCHOR_WALLET"
 
 wallet_pubkey="$(solana-keygen pubkey "$ANCHOR_WALLET")"
 
-echo "Verifying RPC access..."
+section "RPC sanity"
+echo "Deploy wallet: $wallet_pubkey"
+echo "Frontend RPC: $NEXT_PUBLIC_RPC_URL"
+echo "Deploy RPC:   $HELIUS_RPC_URL"
+echo "Treasury:     $TREASURY_WALLET"
 solana cluster-version --url "$HELIUS_RPC_URL" >/dev/null
 solana cluster-version --url "$NEXT_PUBLIC_RPC_URL" >/dev/null
 
 export ANCHOR_PROVIDER_URL="$HELIUS_RPC_URL"
-echo "Building program..."
+section "Build"
 anchor build
 
 require_file "target/deploy/ozlax.so"
@@ -62,55 +73,50 @@ fee_buffer_lamports=5000000
 required_lamports=$((rent_lamports + fee_buffer_lamports))
 balance_lamports="$(solana balance "$wallet_pubkey" --lamports --url "$HELIUS_RPC_URL" | awk '{print $1}')"
 
-echo "Deploy wallet: $wallet_pubkey"
-echo "Frontend RPC: $NEXT_PUBLIC_RPC_URL"
-echo "Deploy RPC:   $HELIUS_RPC_URL"
-echo "Treasury:     $TREASURY_WALLET"
+section "Deploy threshold"
 echo "Program ID:   $program_id"
 echo "Artifact:     ${artifact_size} bytes"
 echo "Rent floor:   ${rent_lamports} lamports"
+echo "Fee buffer:   ${fee_buffer_lamports} lamports"
+echo "Threshold:    ${required_lamports} lamports"
 echo "Balance:      ${balance_lamports} lamports"
 
 if (( balance_lamports < required_lamports )); then
-  echo "Wallet balance is below the current deploy threshold. Need at least ${required_lamports} lamports." >&2
-  exit 1
+  fail "Wallet balance is below the current deploy threshold. Need at least ${required_lamports} lamports."
 fi
 
-echo "Deploying to devnet..."
+section "Deploy"
 anchor deploy --provider.cluster devnet
 
-echo "Verifying deployed program..."
+section "Program verification"
 solana program show "$program_id" --url "$HELIUS_RPC_URL"
 
 export PROGRAM_ID="$program_id"
 export NEXT_PUBLIC_PROGRAM_ID="$program_id"
 
-echo "Initializing vault..."
-init_output="$(npx tsx scripts/initialize-vault.ts)"
+if [[ -z "${PROGRAM_ID// }" ]]; then
+  fail "PROGRAM_ID is empty after deploy."
+fi
+
+section "Vault init"
+init_output="$(tsx scripts/initialize-vault.ts)"
 printf '%s\n' "$init_output"
 
 vault_pda="$(printf '%s\n' "$init_output" | awk -F': ' '/Derived vault PDA/ {print $2}' | tail -n 1)"
 init_tx="$(printf '%s\n' "$init_output" | awk -F': ' '/Initialize tx/ {print $2}' | tail -n 1)"
 
-if [[ -z "${PROGRAM_ID// }" ]]; then
-  echo "PROGRAM_ID is empty after deploy." >&2
-  exit 1
-fi
-
 if [[ -z "${vault_pda// }" ]]; then
-  echo "Failed to capture vault PDA from initialization output." >&2
-  exit 1
+  fail "Failed to capture vault PDA from initialization output."
 fi
 
 if [[ -z "${init_tx// }" ]]; then
-  echo "Failed to capture initialize transaction signature." >&2
-  exit 1
+  fail "Failed to capture initialize transaction signature."
 fi
 
-echo "Verifying vault account..."
+section "Vault verification"
 solana account "$vault_pda" --url "$HELIUS_RPC_URL" >/dev/null
 
-echo "Deploy complete:"
+section "Deploy complete"
 echo "  Program ID: $PROGRAM_ID"
 echo "  Vault PDA:  $vault_pda"
 echo "  Init tx:    $init_tx"

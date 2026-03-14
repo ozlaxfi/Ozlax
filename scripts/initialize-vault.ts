@@ -44,7 +44,8 @@ const loadKeypair = (keypairPath: string) => {
 
 const main = async () => {
   const rawPath = process.env.KEEPER_KEYPAIR_PATH || process.env.ANCHOR_WALLET || "~/.config/solana/id.json";
-  const resolvedPath = rawPath.replace(/^~(?=\/)/, process.env.USERPROFILE || "");
+  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
+  const resolvedPath = rawPath.replace(/^~(?=\/)/, homeDir);
   const payer = loadKeypair(resolvedPath);
   const rpcUrl = (process.env.HELIUS_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "").trim();
   if (!rpcUrl) {
