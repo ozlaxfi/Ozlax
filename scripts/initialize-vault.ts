@@ -44,6 +44,21 @@ const loadKeypair = (keypairPath: string) => {
   return Keypair.fromSecretKey(Uint8Array.from(secret));
 };
 
+const waitForAccount = async (connection: Connection, address: PublicKey, attempts = 10) => {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const account = await connection.getAccountInfo(address, "confirmed");
+    if (account) {
+      return account;
+    }
+
+    if (attempt < attempts) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  return null;
+};
+
 const main = async () => {
   const rawPath = process.env.KEEPER_KEYPAIR_PATH || process.env.ANCHOR_WALLET || "~/.config/solana/id.json";
   const homeDir = process.env.HOME || process.env.USERPROFILE || "";
@@ -93,7 +108,7 @@ const main = async () => {
 
   console.log(`Initialize tx: ${signature}`);
 
-  const vaultAccount = await connection.getAccountInfo(vaultPda, "confirmed");
+  const vaultAccount = await waitForAccount(connection, vaultPda);
   if (!vaultAccount) {
     throw new Error(`Vault PDA ${vaultPda.toBase58()} was not created.`);
   }
