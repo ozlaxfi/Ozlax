@@ -129,6 +129,7 @@ Solana program deploy cost is dominated by upgradeable loader rent, not normal t
 - This MVP uses simulated or keeper-reported yield inputs during harvest.
 - Real strategy settlement integration should verify realized vault-level yield before production use.
 - Treasury and authority keys should be isolated from the frontend wallet.
+- Mainnet should use separate wallets for deploy or upgrade authority and treasury custody, and the current real-SOL wallet should stay untouched until that split is ready.
 - Audit the reward math, vault solvency assumptions, and keeper permissions before mainnet funds.
 
 ## Community
