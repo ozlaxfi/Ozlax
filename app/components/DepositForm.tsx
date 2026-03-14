@@ -9,16 +9,30 @@ type Props = {
   loading: boolean;
   disabled: boolean;
   walletBalance?: number | null;
+  weightedApy?: number | null;
 };
 
-export default function DepositForm({ onSubmit, loading, disabled, walletBalance }: Props) {
+const FEE_RESERVE_SOL = 0.01;
+
+export default function DepositForm({ onSubmit, loading, disabled, walletBalance, weightedApy }: Props) {
   const [amount, setAmount] = useState("");
   const { showToast } = useToast();
   const parsedAmount = Number(amount);
   const hasAmount = amount.trim().length > 0;
+  const spendableBalance =
+    walletBalance !== null && walletBalance !== undefined ? Math.max(walletBalance - FEE_RESERVE_SOL, 0) : null;
   const exceedsBalance = walletBalance !== null && walletBalance !== undefined && parsedAmount > walletBalance;
   const isValidAmount = hasAmount && Number.isFinite(parsedAmount) && parsedAmount >= 0.01 && !exceedsBalance;
   const submitDisabled = disabled || loading || !isValidAmount;
+  const estimatedDailyYield = weightedApy && hasAmount && Number.isFinite(parsedAmount) ? (parsedAmount * weightedApy) / 365 : null;
+
+  const fillAmount = (percentage: number) => {
+    if (spendableBalance === null || spendableBalance <= 0) {
+      return;
+    }
+
+    setAmount((spendableBalance * percentage).toFixed(4));
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -63,6 +77,34 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
         <span className="card-hint">Minimum 0.01 SOL</span>
       </div>
 
+      <div className="form-meta form-meta-stack">
+        <div>
+          <span>Wallet balance</span>
+          <strong>{formatSol(walletBalance)}</strong>
+        </div>
+        <div className="selector-row">
+          {[0.25, 0.5, 0.75].map((percentage) => (
+            <button
+              key={percentage}
+              type="button"
+              className="selector-chip"
+              disabled={disabled || loading || !spendableBalance}
+              onClick={() => fillAmount(percentage)}
+            >
+              {`${Math.round(percentage * 100)}%`}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="selector-chip"
+            disabled={disabled || loading || !spendableBalance}
+            onClick={() => fillAmount(1)}
+          >
+            Max
+          </button>
+        </div>
+      </div>
+
       <label className="field-group">
         <span className="field-label">Amount</span>
         <div className="field-input-row">
@@ -77,28 +119,21 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
             placeholder="0.10"
             disabled={disabled || loading}
           />
-          <button
-            type="button"
-            className="field-action"
-            disabled={disabled || loading || !walletBalance}
-            onClick={() => setAmount(walletBalance ? walletBalance.toFixed(4) : "")}
-          >
-            Max
-          </button>
         </div>
         <p className="form-inline-hint">
           {hasAmount && !isValidAmount
             ? exceedsBalance
               ? "That deposit is larger than your wallet balance."
               : "Enter at least 0.01 SOL."
-            : "Min 0.01 SOL. Use Max to fill the field with your connected wallet balance."}
+            : "Min 0.01 SOL. Quick-select buttons keep a small fee reserve in your wallet."}
         </p>
       </label>
 
-      <div className="form-meta">
-        <span>Wallet balance</span>
-        <strong>{formatSol(walletBalance)}</strong>
-      </div>
+      {estimatedDailyYield !== null && weightedApy !== null ? (
+        <p className="form-note">
+          Estimated daily yield: <strong>{`~${formatSol(estimatedDailyYield, 6)}`}</strong> based on the current weighted APY.
+        </p>
+      ) : null}
 
       <p className="form-note">Depositing settles pending rewards first, then increases your principal balance.</p>
 

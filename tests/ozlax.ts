@@ -17,6 +17,7 @@ describe("ozlax", () => {
   const stressUserA = Keypair.generate();
   const stressUserB = Keypair.generate();
   const stressUserC = Keypair.generate();
+  const rebalanceUser = Keypair.generate();
 
   const [vaultPda] = PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId);
   const [userPositionPda] = PublicKey.findProgramAddressSync(
@@ -43,6 +44,10 @@ describe("ozlax", () => {
     [Buffer.from("user-position"), stressUserC.publicKey.toBuffer()],
     program.programId,
   );
+  const [rebalanceUserPositionPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user-position"), rebalanceUser.publicKey.toBuffer()],
+    program.programId,
+  );
 
   const ozxMint = Keypair.generate().publicKey;
   const marinadeStakeAccount = Keypair.generate().publicKey;
@@ -63,6 +68,7 @@ describe("ozlax", () => {
   const stressDepositA = new BN(0.03 * LAMPORTS_PER_SOL);
   const stressDepositB = new BN(0.05 * LAMPORTS_PER_SOL);
   const stressDepositC = new BN(0.08 * LAMPORTS_PER_SOL);
+  const rebalanceDepositLamports = new BN(0.07 * LAMPORTS_PER_SOL);
 
   const airdrop = async (pubkey: PublicKey, amountSol = 2) => {
     const sig = await provider.connection.requestAirdrop(pubkey, amountSol * LAMPORTS_PER_SOL);
@@ -119,6 +125,7 @@ describe("ozlax", () => {
     await airdrop(stressUserA.publicKey, 2);
     await airdrop(stressUserB.publicKey, 2);
     await airdrop(stressUserC.publicKey, 2);
+    await airdrop(rebalanceUser.publicKey, 2);
 
     try {
       const existingVault = (await program.account.vaultState.fetch(vaultPda)) as any;
@@ -188,7 +195,7 @@ describe("ozlax", () => {
   it("harvests yield and sends the treasury fee", async () => {
     const treasuryBefore = await provider.connection.getBalance(initializedTreasury);
 
-    const signature = await program.methods
+    await program.methods
       .harvestYield(marinadeYield, jitoYield)
       .accounts({
         vault: vaultPda,
@@ -430,6 +437,80 @@ describe("ozlax", () => {
 
     userPosition = (await program.account.userPosition.fetch(fullWithdrawUserPositionPda)) as any;
     assert.equal(userPosition.depositedAmount.toString(), "0");
+  });
+
+  it("rebalance followed by harvest uses new allocation correctly", async () => {
+    await program.methods
+      .rebalance(70, 30)
+      .accounts({
+        vault: vaultPda,
+        authority: authority.publicKey,
+      })
+      .rpc();
+
+    await program.methods
+      .deposit(rebalanceDepositLamports)
+      .accounts({
+        vault: vaultPda,
+        userPosition: rebalanceUserPositionPda,
+        user: rebalanceUser.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([rebalanceUser])
+      .rpc();
+
+    const vaultBeforeHarvest = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const totalDepositedBefore = new BN(vaultBeforeHarvest.totalDeposited.toString());
+    const totalYieldBefore = new BN(vaultBeforeHarvest.totalYieldHarvested.toString());
+
+    assert.equal(vaultBeforeHarvest.marinadePct, 70);
+    assert.equal(vaultBeforeHarvest.jitoPct, 30);
+
+    const rebalanceMarinadeYield = new BN(7_000_000);
+    const rebalanceJitoYield = new BN(3_000_000);
+    const rebalanceTotalYield = rebalanceMarinadeYield.add(rebalanceJitoYield);
+    const rebalanceFee = rebalanceTotalYield.mul(new BN(1_000)).div(new BN(10_000));
+    const rebalanceDistributable = rebalanceTotalYield.sub(rebalanceFee);
+    const rebalanceIncrement = rebalanceDistributable.mul(rewardPrecision).div(totalDepositedBefore);
+    const expectedPending = rebalanceDepositLamports.mul(rebalanceIncrement).div(rewardPrecision);
+
+    await program.methods
+      .harvestYield(rebalanceMarinadeYield, rebalanceJitoYield)
+      .accounts({
+        vault: vaultPda,
+        authority: authority.publicKey,
+        treasury: initializedTreasury,
+      })
+      .rpc();
+
+    const pending = await pendingYieldLamportsFor(rebalanceUserPositionPda);
+    assertBnClose(pending, expectedPending);
+
+    await program.methods
+      .claimYield()
+      .accounts({
+        vault: vaultPda,
+        userPosition: rebalanceUserPositionPda,
+        user: rebalanceUser.publicKey,
+      })
+      .signers([rebalanceUser])
+      .rpc();
+
+    const rebalanceUserAfter = (await program.account.userPosition.fetch(rebalanceUserPositionPda)) as any;
+    const vaultAfterHarvest = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const currentAcc = new BN(vaultAfterHarvest.accYieldPerShare.toString());
+
+    assertBnClose(new BN(rebalanceUserAfter.yieldEarnedClaimed.toString()), expectedPending);
+    assert.equal(
+      rebalanceUserAfter.rewardDebt.toString(),
+      rebalanceDepositLamports.mul(currentAcc).div(rewardPrecision).toString(),
+    );
+    assert.equal(vaultAfterHarvest.marinadePct, 70);
+    assert.equal(vaultAfterHarvest.jitoPct, 30);
+    assert.equal(
+      vaultAfterHarvest.totalYieldHarvested.toString(),
+      totalYieldBefore.add(rebalanceTotalYield).toString(),
+    );
   });
 
   it("multiple harvests accumulate correctly", async () => {

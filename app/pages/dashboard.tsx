@@ -154,6 +154,7 @@ export default function DashboardPage() {
             loading={ozlax.actionLoading === "deposit"}
             disabled={actionsDisabled}
             walletBalance={ozlax.walletBalance}
+            weightedApy={ozlax.weightedApy}
           />
           <WithdrawForm
             onSubmit={ozlax.withdraw}

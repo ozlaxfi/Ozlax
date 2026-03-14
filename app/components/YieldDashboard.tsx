@@ -65,12 +65,15 @@ export default function YieldDashboard({
   const [copiedSignature, setCopiedSignature] = useState<string | null>(null);
   const deposited = Number(ozlax.userPosition?.depositedAmount?.toString?.() || 0) / 1_000_000_000;
   const claimed = Number(ozlax.userPosition?.yieldEarnedClaimed?.toString?.() || 0) / 1_000_000_000;
+  const totalYieldHarvested = Number(ozlax.vaultState?.totalYieldHarvested?.toString?.() || 0) / 1_000_000_000;
   const feeBps = ozlax.vaultState?.feeBps ?? 1000;
   const marinadePct = ozlax.vaultState?.marinadePct ?? null;
   const jitoPct = ozlax.vaultState?.jitoPct ?? null;
   const lastHarvestSlot = ozlax.vaultState?.lastHarvestSlot ?? null;
   const showSkeleton = ozlax.isRefreshing && !ozlax.vaultState;
   const networkLabel = getNetworkLabel(resolveNetwork(rpcEndpoint));
+  const marinadeWidth = Math.max(0, Math.min(100, marinadePct ?? 0));
+  const jitoWidth = Math.max(0, Math.min(100, jitoPct ?? 0));
 
   const copyWallet = async () => {
     if (!walletAddress) {
@@ -122,7 +125,7 @@ export default function YieldDashboard({
 
             <div className="status-grid">
               {showSkeleton ? (
-                [...Array(7)].map((_, index) => (
+                [...Array(8)].map((_, index) => (
                   <div key={`status-skeleton-${index}`}>
                     <span>Loading</span>
                     <Skeleton height="1.1rem" width={index % 2 === 0 ? "68%" : "84%"} />
@@ -136,7 +139,7 @@ export default function YieldDashboard({
                   </div>
                   <div>
                     <span>Fee rate</span>
-                    <strong>{formatWholePercent(feeBps / 100)}</strong>
+                    <strong>{`${formatWholePercent(feeBps / 100)} of harvested yield`}</strong>
                   </div>
                   <div>
                     <span>Marinade allocation</span>
@@ -147,7 +150,7 @@ export default function YieldDashboard({
                     <strong>{formatWholePercent(jitoPct)}</strong>
                   </div>
                   <div>
-                    <span>Last harvest slot</span>
+                    <span>Last harvest</span>
                     <strong>{formatSlot(lastHarvestSlot)}</strong>
                   </div>
                   <div>
@@ -169,13 +172,43 @@ export default function YieldDashboard({
                     <span>Network</span>
                     <strong>{networkLabel}</strong>
                   </div>
+                  <div>
+                    <span>Total yield harvested</span>
+                    <strong>{formatSol(totalYieldHarvested, 6)}</strong>
+                  </div>
                 </>
               )}
             </div>
 
+            {!showSkeleton ? (
+              <div className="allocation-shell">
+                <div className="allocation-head">
+                  <span>Allocation split</span>
+                  <strong>{`${formatWholePercent(marinadePct)} / ${formatWholePercent(jitoPct)}`}</strong>
+                </div>
+                <div className="allocation-bar" aria-label="Vault allocation split">
+                  <div className="allocation-segment allocation-segment-marinade" style={{ width: `${marinadeWidth}%` }}>
+                    <span>{formatWholePercent(marinadePct)}</span>
+                  </div>
+                  <div className="allocation-segment allocation-segment-jito" style={{ width: `${jitoWidth}%` }}>
+                    <span>{formatWholePercent(jitoPct)}</span>
+                  </div>
+                </div>
+                <div className="allocation-labels">
+                  <span>Marinade</span>
+                  <span>Jito</span>
+                </div>
+              </div>
+            ) : (
+              <div className="allocation-shell">
+                <Skeleton height="0.95rem" width="34%" />
+                <Skeleton height="1.05rem" width="100%" />
+              </div>
+            )}
+
             <p className="supporting-copy">
-              Harvest cadence is keeper driven. The current account model does not store a separate timestamp, so the interface shows
-              the last confirmed slot when that state is available.
+              Harvest cadence is keeper driven. The current account model stores the latest slot rather than a wall-clock timestamp, so
+              the dashboard shows that on-chain marker until a timestamp field exists.
             </p>
           </section>
 

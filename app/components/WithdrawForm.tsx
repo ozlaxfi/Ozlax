@@ -20,6 +20,14 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
   const isValidAmount = hasAmount && Number.isFinite(parsedAmount) && parsedAmount > 0 && !exceedsMax;
   const submitDisabled = disabled || loading || !isValidAmount;
 
+  const fillAmount = (percentage: number) => {
+    if (maxAmount === null || maxAmount === undefined || maxAmount <= 0) {
+      return;
+    }
+
+    setAmount((maxAmount * percentage).toFixed(4));
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -63,6 +71,34 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
         <span className="card-hint">Claimable anytime</span>
       </div>
 
+      <div className="form-meta form-meta-stack">
+        <div>
+          <span>Deposited</span>
+          <strong>{formatSol(maxAmount)}</strong>
+        </div>
+        <div className="selector-row">
+          {[0.25, 0.5, 0.75].map((percentage) => (
+            <button
+              key={percentage}
+              type="button"
+              className="selector-chip"
+              disabled={disabled || loading || !maxAmount}
+              onClick={() => fillAmount(percentage)}
+            >
+              {`${Math.round(percentage * 100)}%`}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="selector-chip"
+            disabled={disabled || loading || !maxAmount}
+            onClick={() => fillAmount(1)}
+          >
+            Max
+          </button>
+        </div>
+      </div>
+
       <label className="field-group">
         <span className="field-label">Amount</span>
         <div className="field-input-row">
@@ -77,28 +113,15 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
             placeholder="0.05"
             disabled={disabled || loading}
           />
-          <button
-            type="button"
-            className="field-action"
-            disabled={disabled || loading || !maxAmount}
-            onClick={() => setAmount(maxAmount ? maxAmount.toFixed(4) : "")}
-          >
-            Max
-          </button>
         </div>
         <p className="form-inline-hint">
           {hasAmount && !isValidAmount
             ? exceedsMax
               ? "That withdrawal is larger than the SOL you have deposited."
               : "Enter a positive withdrawal amount."
-            : `Max available: ${formatSol(maxAmount)}.`}
+            : "Use the quick-select buttons to size a withdrawal without typing the number by hand."}
         </p>
       </label>
-
-      <div className="form-meta">
-        <span>Deposited</span>
-        <strong>{formatSol(maxAmount)}</strong>
-      </div>
 
       <p className="form-note">Withdrawals settle pending rewards first, then reduce your deposited SOL position.</p>
 
