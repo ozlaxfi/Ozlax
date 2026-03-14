@@ -553,6 +553,101 @@ img {
   gap: 18px;
 }
 
+.flow-diagram {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  overflow: hidden;
+}
+
+.flow-line {
+  position: absolute;
+  left: 44px;
+  right: 44px;
+  top: 63px;
+  height: 1px;
+  background:
+    linear-gradient(90deg, rgba(153, 69, 255, 0.08), rgba(153, 69, 255, 0.45), rgba(20, 241, 149, 0.45), rgba(20, 241, 149, 0.08));
+}
+
+.flow-line::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  animation: flow-pulse 5s linear infinite;
+}
+
+.flow-node,
+.loop-step {
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent);
+}
+
+.flow-node::before {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-alt), var(--accent-strong));
+  box-shadow: 0 0 0 6px rgba(82, 185, 220, 0.08);
+}
+
+.flow-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--soft-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.flow-node h3,
+.keeper-loop-card h3,
+.accounting-card h3 {
+  margin: 14px 0 10px;
+  font-size: 1.08rem;
+  letter-spacing: -0.03em;
+}
+
+.flow-node p,
+.loop-step p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.keeper-loop-card,
+.accounting-card {
+  display: grid;
+  gap: 16px;
+}
+
+.loop-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.loop-step strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+}
+
 .step-card {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
@@ -1072,7 +1167,8 @@ img {
   .hero-metric-row,
   .feature-grid,
   .summary-grid,
-  .dashboard-lower-grid {
+  .dashboard-lower-grid,
+  .flow-diagram {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1118,7 +1214,8 @@ img {
   .footer-grid,
   .fee-split,
   .summary-grid,
-  .dashboard-lower-grid {
+  .dashboard-lower-grid,
+  .flow-diagram {
     grid-template-columns: 1fr;
   }
 
@@ -1134,6 +1231,10 @@ img {
   .history-table {
     display: block;
     overflow-x: auto;
+  }
+
+  .flow-line {
+    display: none;
   }
 }
 
@@ -1186,5 +1287,22 @@ img {
 
   .footer-brand {
     flex-direction: column;
+  }
+}
+
+@keyframes flow-pulse {
+  0% {
+    transform: translateX(-45%);
+    opacity: 0;
+  }
+
+  25%,
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(45%);
+    opacity: 0;
   }
 }

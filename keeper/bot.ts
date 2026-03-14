@@ -12,6 +12,15 @@ const PLACEHOLDER_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
 const MARINADE_FALLBACK_APY = 0.072;
 const JITO_FALLBACK_APY = 0.081;
 
+const requireEnv = (name: string, fallback?: string) => {
+  const value = process.env[name]?.trim() || fallback?.trim();
+  if (!value) {
+    throw new Error(`${name} must be set before running the keeper.`);
+  }
+
+  return value;
+};
+
 const idl = {
   version: "0.1.0",
   name: "ozlax",
@@ -71,7 +80,7 @@ const loadOptionalModule = async (specifier: string) => {
   return importer(specifier);
 };
 
-export const loadKeypair = (keypairPath = process.env.KEEPER_KEYPAIR_PATH || "") => {
+export const loadKeypair = (keypairPath = requireEnv("KEEPER_KEYPAIR_PATH", process.env.ANCHOR_WALLET)) => {
   const resolved = path.resolve(keypairPath);
   const secret = JSON.parse(fs.readFileSync(resolved, "utf8")) as number[];
   return Keypair.fromSecretKey(Uint8Array.from(secret));
@@ -79,7 +88,8 @@ export const loadKeypair = (keypairPath = process.env.KEEPER_KEYPAIR_PATH || "")
 
 export const getProvider = () => {
   const wallet = new anchor.Wallet(loadKeypair());
-  const connection = new Connection(process.env.HELIUS_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "", "confirmed");
+  const rpcUrl = requireEnv("HELIUS_RPC_URL", process.env.NEXT_PUBLIC_RPC_URL);
+  const connection = new Connection(rpcUrl, "confirmed");
   return new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 };
 

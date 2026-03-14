@@ -67,6 +67,54 @@ const feeChecklist = [
   "$OZX remains the governance asset aligned to protocol growth.",
 ];
 
+const vaultFlow = [
+  {
+    label: "Deposit",
+    title: "Users deposit SOL once",
+    body: "Principal enters the Ozlax vault PDA and the user position records deposited amount plus reward debt.",
+  },
+  {
+    label: "Route",
+    title: "Vault allocates across Marinade and Jito",
+    body: "The global vault tracks strategy weights while keeping a single user-facing entry point.",
+  },
+  {
+    label: "Harvest",
+    title: "Keeper settles yield on cadence",
+    body: "The keeper forwards treasury fees and updates the reward accumulator once per harvest cycle.",
+  },
+  {
+    label: "Claim",
+    title: "Users realize rewards on interaction",
+    body: "Claims, deposits, and withdrawals settle pending rewards lazily without touching every account.",
+  },
+];
+
+const keeperLoop = [
+  {
+    title: "Every 24 hours",
+    detail: "The keeper reads vault TVL and current allocation percentages.",
+  },
+  {
+    title: "Estimate strategy yield",
+    detail: "Marinade and Jito APY inputs roll into one weighted daily harvest simulation.",
+  },
+  {
+    title: "Send 10% to treasury",
+    detail: "Protocol revenue is carved out once per harvest before user distribution is applied.",
+  },
+  {
+    title: "Distribute 90% to depositors",
+    detail: "The remaining amount increases `acc_yield_per_share` so users settle on demand.",
+  },
+];
+
+const accountingPrinciples = [
+  "Global accumulator updates once per harvest instead of iterating across user accounts.",
+  "Each user position stores reward debt so pending yield is computed in O(1) time.",
+  "Principal, claimed yield, and vault-level totals stay compact for lower rent and simpler reads.",
+];
+
 export default function HomePage() {
   return (
     <Layout>
@@ -190,6 +238,27 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section id="vault-flow" className="section">
+          <div className="section-heading">
+            <span className="section-kicker">Vault flow</span>
+            <h2>One vault path from user deposit to realized yield.</h2>
+            <p>
+              Ozlax keeps the user flow compact while separating protocol routing, keeper harvest, and on-chain accounting into
+              clear stages.
+            </p>
+          </div>
+          <div className="flow-diagram panel">
+            <div className="flow-line" aria-hidden="true" />
+            {vaultFlow.map((item) => (
+              <article key={item.label} className="flow-node">
+                <span className="flow-tag">{item.label}</span>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="strategies" className="section section-grid">
           <div className="section-heading left">
             <span className="section-kicker">Strategies</span>
@@ -239,6 +308,30 @@ export default function HomePage() {
             <h3>Protocol economics stay simple.</h3>
             <ul className="check-list">
               {feeChecklist.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section id="keeper-loop" className="section section-grid">
+          <div className="panel keeper-loop-card">
+            <span className="card-eyebrow">Keeper loop</span>
+            <h3>Harvest automation runs on a 24 hour rhythm.</h3>
+            <div className="loop-grid">
+              {keeperLoop.map((item, index) => (
+                <div key={item.title} className="loop-step">
+                  <strong>{`${index + 1}. ${item.title}`}</strong>
+                  <p>{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="panel accounting-card">
+            <span className="card-eyebrow">Reward-per-share accounting</span>
+            <h3>Protocol-grade settlement without user iteration.</h3>
+            <ul className="check-list">
+              {accountingPrinciples.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
