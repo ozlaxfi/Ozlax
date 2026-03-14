@@ -3,6 +3,7 @@ set -euo pipefail
 
 SOLANA_VERSION="1.18.26"
 ANCHOR_VERSION="0.29.0"
+ANCHOR_RUST_VERSION="1.75.0"
 NODE_MAJOR="20"
 APT_PREREQS=(curl git build-essential pkg-config libssl-dev libudev-dev clang cmake)
 
@@ -95,13 +96,32 @@ install_solana() {
   fi
 
   echo "Installing Solana CLI ${SOLANA_VERSION}..."
-  sh -c "$(curl -sSfL https://release.solana.com/v${SOLANA_VERSION}/install)"
+  sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+}
+
+install_avm() {
+  if command_exists avm; then
+    echo "AVM already installed: $(avm --version)"
+    return
+  fi
+
+  echo "Installing AVM..."
+  cargo install --git https://github.com/coral-xyz/anchor --tag "v${ANCHOR_VERSION}" avm --locked --force
+}
+
+anchor_version() {
+  local version_output=""
+  if ! version_output="$(anchor --version 2>/dev/null)"; then
+    return 0
+  fi
+
+  awk '{print $2}' <<<"$version_output"
 }
 
 install_anchor() {
   local current_version=""
   if command_exists anchor; then
-    current_version="$(anchor --version | awk '{print $2}')"
+    current_version="$(anchor_version)"
   fi
 
   if [[ "$current_version" == "$ANCHOR_VERSION" ]]; then
@@ -109,8 +129,19 @@ install_anchor() {
     return
   fi
 
+  echo "Installing Rust ${ANCHOR_RUST_VERSION} for Anchor ${ANCHOR_VERSION} compatibility..."
+  rustup toolchain install "$ANCHOR_RUST_VERSION" --profile minimal >/dev/null
+
   echo "Installing Anchor CLI ${ANCHOR_VERSION}..."
-  cargo install --locked --force anchor-cli --version "$ANCHOR_VERSION"
+  install_avm
+
+  if RUSTUP_TOOLCHAIN="$ANCHOR_RUST_VERSION" avm install "$ANCHOR_VERSION" \
+    && RUSTUP_TOOLCHAIN="$ANCHOR_RUST_VERSION" avm use "$ANCHOR_VERSION"; then
+    return
+  fi
+
+  echo "AVM install path failed, falling back to cargo +${ANCHOR_RUST_VERSION}..."
+  cargo +"$ANCHOR_RUST_VERSION" install --locked --force anchor-cli --version "$ANCHOR_VERSION"
 }
 
 install_tsx() {
