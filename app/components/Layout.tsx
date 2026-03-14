@@ -19,6 +19,7 @@ const footerLinks = [
   { href: "/#how-it-works", label: "How It Works" },
   { href: "https://github.com/ozlaxfi/Ozlax", label: "Docs", external: true },
   { href: "/#community", label: "Community" },
+  { href: "/changelog", label: "What's New" },
 ];
 
 const legalLinks = [

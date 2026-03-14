@@ -92,6 +92,13 @@ a {
   text-decoration: none;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(153, 69, 255, 0.85);
+  outline-offset: 3px;
+}
+
 button,
 input {
   font: inherit;
@@ -521,6 +528,42 @@ img {
   display: flex;
   flex-wrap: wrap;
   gap: 0.85rem;
+}
+
+.protocol-stats-shell {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.compact-section-head {
+  max-width: 44rem;
+}
+
+.protocol-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.protocol-stat-card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.protocol-stat-card span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.protocol-stat-card strong {
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.protocol-stat-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .home-hero {
@@ -1430,6 +1473,58 @@ img {
   border: 1px solid var(--border);
 }
 
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(5, 10, 18, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.confirm-modal {
+  width: min(32rem, calc(100vw - 24px));
+  display: grid;
+  gap: 1rem;
+  border-radius: 1.6rem;
+}
+
+.confirm-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirm-modal-head h3 {
+  margin: 0.45rem 0 0;
+}
+
+.confirm-modal-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.confirm-modal-body {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .form-inline-hint {
   margin: -0.1rem 0 0;
   color: var(--muted);
@@ -1531,6 +1626,41 @@ img {
   color: var(--soft);
 }
 
+.activity-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.activity-type-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.activity-type-deposit {
+  color: #6bf0b8;
+}
+
+.activity-type-withdraw {
+  color: #ffb76e;
+}
+
+.activity-type-claim {
+  color: #8cc8ff;
+}
+
+.activity-type-other {
+  color: var(--soft);
+}
+
 .table-empty {
   padding: 1.2rem 0 0.3rem !important;
 }
@@ -1539,7 +1669,15 @@ img {
   color: var(--solana-green);
 }
 
+.table-link-secondary {
+  color: var(--muted);
+}
+
 .signature-cell {
+  min-width: 0;
+}
+
+.signature-actions {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -2094,6 +2232,7 @@ img {
   }
 
   .hero-metrics,
+  .protocol-stats-grid,
   .metrics-grid,
   .status-grid,
   .protocol-summary {
@@ -2166,6 +2305,7 @@ img {
   }
 
   .hero-metrics,
+  .protocol-stats-grid,
   .metrics-grid,
   .action-grid,
   .status-grid,
@@ -2257,6 +2397,11 @@ img {
     left: 12px;
     right: 12px;
     width: auto;
+  }
+
+  .confirm-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
 

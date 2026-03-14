@@ -13,6 +13,7 @@ describe("ozlax", () => {
   const user = Keypair.generate();
   const secondUser = Keypair.generate();
   const fullWithdrawUser = Keypair.generate();
+  const withdrawAllUser = Keypair.generate();
   const nonAuthority = Keypair.generate();
   const stressUserA = Keypair.generate();
   const stressUserB = Keypair.generate();
@@ -30,6 +31,10 @@ describe("ozlax", () => {
   );
   const [fullWithdrawUserPositionPda] = PublicKey.findProgramAddressSync(
     [Buffer.from("user-position"), fullWithdrawUser.publicKey.toBuffer()],
+    program.programId,
+  );
+  const [withdrawAllUserPositionPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user-position"), withdrawAllUser.publicKey.toBuffer()],
     program.programId,
   );
   const [stressUserAPositionPda] = PublicKey.findProgramAddressSync(
@@ -120,6 +125,7 @@ describe("ozlax", () => {
     await airdrop(user.publicKey, 2);
     await airdrop(secondUser.publicKey, 2);
     await airdrop(fullWithdrawUser.publicKey, 2);
+    await airdrop(withdrawAllUser.publicKey, 2);
     await airdrop(treasury.publicKey, 1);
     await airdrop(nonAuthority.publicKey, 1);
     await airdrop(stressUserA.publicKey, 2);
@@ -437,6 +443,69 @@ describe("ozlax", () => {
 
     userPosition = (await program.account.userPosition.fetch(fullWithdrawUserPositionPda)) as any;
     assert.equal(userPosition.depositedAmount.toString(), "0");
+  });
+
+  it("withdraw all settles yield and leaves zero balance", async () => {
+    const withdrawAllDepositLamports = new BN(0.2 * LAMPORTS_PER_SOL);
+
+    await program.methods
+      .deposit(withdrawAllDepositLamports)
+      .accounts({
+        vault: vaultPda,
+        userPosition: withdrawAllUserPositionPda,
+        user: withdrawAllUser.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([withdrawAllUser])
+      .rpc();
+
+    const balanceAfterDeposit = await provider.connection.getBalance(withdrawAllUser.publicKey);
+    const vaultBeforeHarvest = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const totalDepositedBefore = new BN(vaultBeforeHarvest.totalDeposited.toString());
+    const claimedBefore = new BN(
+      ((await program.account.userPosition.fetch(withdrawAllUserPositionPda)) as any).yieldEarnedClaimed.toString(),
+    );
+    const harvestMarinade = new BN(5_000_000);
+    const harvestJito = new BN(4_000_000);
+    const harvestTotal = harvestMarinade.add(harvestJito);
+    const harvestFee = harvestTotal.mul(new BN(1_000)).div(new BN(10_000));
+    const harvestDistributable = harvestTotal.sub(harvestFee);
+    const expectedIncrement = harvestDistributable.mul(rewardPrecision).div(totalDepositedBefore);
+    const expectedPending = withdrawAllDepositLamports.mul(expectedIncrement).div(rewardPrecision);
+
+    await program.methods
+      .harvestYield(harvestMarinade, harvestJito)
+      .accounts({
+        vault: vaultPda,
+        authority: authority.publicKey,
+        treasury: initializedTreasury,
+      })
+      .rpc();
+
+    await program.methods
+      .withdraw(withdrawAllDepositLamports)
+      .accounts({
+        vault: vaultPda,
+        userPosition: withdrawAllUserPositionPda,
+        user: withdrawAllUser.publicKey,
+      })
+      .signers([withdrawAllUser])
+      .rpc();
+
+    const balanceAfterWithdraw = await provider.connection.getBalance(withdrawAllUser.publicKey);
+    const userPosition = (await program.account.userPosition.fetch(withdrawAllUserPositionPda)) as any;
+    const pending = await pendingYieldLamportsFor(withdrawAllUserPositionPda);
+    const claimedAfter = new BN(userPosition.yieldEarnedClaimed.toString());
+    const netReturn = balanceAfterWithdraw - balanceAfterDeposit;
+
+    assert.equal(userPosition.depositedAmount.toString(), "0");
+    assert.ok(pending.isZero(), "pending yield should be settled during full withdrawal");
+    assertBnClose(claimedAfter.sub(claimedBefore), expectedPending);
+    assert.ok(netReturn > withdrawAllDepositLamports.toNumber(), "withdrawal should return principal plus settled yield");
+    assert.ok(
+      withdrawAllDepositLamports.add(expectedPending).toNumber() - netReturn < 20_000,
+      "withdrawal should land within fee tolerance of principal plus settled yield",
+    );
   });
 
   it("rebalance followed by harvest uses new allocation correctly", async () => {

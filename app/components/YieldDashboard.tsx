@@ -75,6 +75,21 @@ export default function YieldDashboard({
   const marinadeWidth = Math.max(0, Math.min(100, marinadePct ?? 0));
   const jitoWidth = Math.max(0, Math.min(100, jitoPct ?? 0));
 
+  const getActivityTone = (type: string) => {
+    const value = type.toLowerCase();
+    if (value.includes("deposit")) {
+      return "deposit";
+    }
+    if (value.includes("withdraw")) {
+      return "withdraw";
+    }
+    if (value.includes("claim")) {
+      return "claim";
+    }
+
+    return "other";
+  };
+
   const copyWallet = async () => {
     if (!walletAddress) {
       return;
@@ -238,7 +253,7 @@ export default function YieldDashboard({
               <span className="card-eyebrow">Recent activity</span>
               <h3>Wallet transactions</h3>
             </div>
-            <span className="card-hint">{transactions.length} / 5</span>
+            <span className="card-hint">{transactions.length} / 10</span>
           </div>
 
           <div className="table-shell">
@@ -255,20 +270,30 @@ export default function YieldDashboard({
                 {transactions.length > 0 ? (
                   transactions.map((transaction) => (
                     <tr key={transaction.signature}>
-                      <td>{transaction.type}</td>
-                      <td>{formatSol(transaction.amount, 4)}</td>
+                      <td>
+                        <span className={`activity-type-chip activity-type-${getActivityTone(transaction.type)}`}>
+                          <span className="activity-type-dot" aria-hidden="true" />
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td>{transaction.amount !== null ? formatSol(transaction.amount, 4) : "—"}</td>
                       <td>{formatTimestamp(transaction.timestamp)}</td>
                       <td className="signature-cell">
-                        <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
-                          {shortenSignature(transaction.signature)}
-                        </a>
-                        <button
-                          type="button"
-                          className="copy-chip"
-                          onClick={() => void copySignature(transaction.signature)}
-                        >
-                          {copiedSignature === transaction.signature ? "Copied!" : "Copy"}
-                        </button>
+                        <div className="signature-actions">
+                          <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
+                            {shortenSignature(transaction.signature)}
+                          </a>
+                          <button
+                            type="button"
+                            className="copy-chip"
+                            onClick={() => void copySignature(transaction.signature)}
+                          >
+                            {copiedSignature === transaction.signature ? "Copied!" : "Copy"}
+                          </button>
+                          <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link table-link-secondary">
+                            View on Explorer
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   ))

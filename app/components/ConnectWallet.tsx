@@ -36,6 +36,21 @@ export default function ConnectWallet({ className = "" }: Props) {
     }
   }, [isConnected]);
 
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
+
   const handleCopy = async () => {
     if (!address) {
       return;

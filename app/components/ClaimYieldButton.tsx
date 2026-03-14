@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { ActionResult } from "../hooks/useOzlax";
 import { formatSol } from "../utils/format";
+import ConfirmModal from "./ConfirmModal";
 import { useToast } from "./Toast";
 
 type Props = {
@@ -13,10 +14,12 @@ type Props = {
 
 export default function ClaimYieldButton({ onClick, loading, pendingYield, disabled }: Props) {
   const [claimedAmount, setClaimedAmount] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { showToast } = useToast();
 
   const handleClick = async () => {
     const result = await onClick();
+    setConfirmOpen(false);
     if (result.ok) {
       setClaimedAmount(result.amount ?? pendingYield);
     }
@@ -48,10 +51,26 @@ export default function ClaimYieldButton({ onClick, loading, pendingYield, disab
         type="button"
         disabled={disabled || loading || pendingYield <= 0}
         className="button-primary button-block"
-        onClick={() => void handleClick()}
+        onClick={() => setConfirmOpen(true)}
       >
         {loading ? "Claiming..." : pendingYield > 0 ? `Claim ${formatSol(pendingYield)}` : "Yield settles here"}
       </button>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title={`Claim ${formatSol(pendingYield)}`}
+        confirmLabel="Confirm claim"
+        loading={loading}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleClick}
+      >
+        <p className="form-note">
+          Claiming realizes your current pending yield without touching the SOL you still have deposited in the vault.
+        </p>
+        <p className="form-inline-hint">
+          You are about to claim <strong>{formatSol(pendingYield)}</strong>.
+        </p>
+      </ConfirmModal>
     </div>
   );
 }

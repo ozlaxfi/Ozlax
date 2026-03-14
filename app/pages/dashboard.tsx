@@ -56,7 +56,7 @@ export default function DashboardPage() {
       }
 
       const items = await fetchWalletTransactions(wallet.publicKey.toBase58(), connection.rpcEndpoint);
-      setTransactions(items.slice(0, 5));
+      setTransactions(items.slice(0, 10));
       setActivityMessage(items.length ? "" : "No recent activity.");
     };
 

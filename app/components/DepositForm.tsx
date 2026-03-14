@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 
 import type { ActionResult } from "../hooks/useOzlax";
 import { formatSol } from "../utils/format";
+import ConfirmModal from "./ConfirmModal";
 import { useToast } from "./Toast";
 
 type Props = {
@@ -16,6 +17,7 @@ const FEE_RESERVE_SOL = 0.01;
 
 export default function DepositForm({ onSubmit, loading, disabled, walletBalance, weightedApy }: Props) {
   const [amount, setAmount] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { showToast } = useToast();
   const parsedAmount = Number(amount);
   const hasAmount = amount.trim().length > 0;
@@ -34,16 +36,14 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
     setAmount((spendableBalance * percentage).toFixed(4));
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-
+  const validateAmount = () => {
     if (!Number.isFinite(parsedAmount) || parsedAmount < 0.01) {
       showToast({
         tone: "error",
         title: "Deposit blocked",
         message: "Enter at least 0.01 SOL before sending the transaction.",
       });
-      return;
+      return false;
     }
 
     if (exceedsBalance) {
@@ -52,10 +52,15 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
         title: "Deposit blocked",
         message: "That amount is larger than the SOL currently in your connected wallet.",
       });
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const executeDeposit = async () => {
     const result = await onSubmit(parsedAmount);
+    setConfirmOpen(false);
     if (result.ok) {
       setAmount("");
     }
@@ -65,6 +70,14 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
       message: result.message,
       signature: result.signature,
     });
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!validateAmount()) {
+      return;
+    }
+    setConfirmOpen(true);
   };
 
   return (
@@ -140,6 +153,22 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
       <button type="submit" disabled={submitDisabled} className="button-primary button-block">
         {loading ? "Depositing..." : "Deposit SOL"}
       </button>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title={`Deposit ${formatSol(parsedAmount)}`}
+        confirmLabel="Confirm deposit"
+        loading={loading}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={executeDeposit}
+      >
+        <p className="form-note">
+          This deposit will settle any pending rewards first and then increase your principal inside the Ozlax vault.
+        </p>
+        <p className="form-inline-hint">
+          You are about to deposit <strong>{formatSol(parsedAmount)}</strong>.
+        </p>
+      </ConfirmModal>
     </form>
   );
 }

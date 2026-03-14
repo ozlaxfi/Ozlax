@@ -8,7 +8,7 @@ import Layout from "../components/Layout";
 import { SOCIAL_LINKS, SocialIcon } from "../components/SocialIcons";
 import TVLCounter from "../components/TVLCounter";
 import { useOzlax } from "../hooks/useOzlax";
-import { formatPercent, formatWholePercent } from "../utils/format";
+import { formatCompactSol, formatPercent, formatSol, formatWholePercent } from "../utils/format";
 
 const overviewCards = [
   {
@@ -224,6 +224,42 @@ export default function HomePage() {
                 <strong>One Anchor program</strong>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="protocol-stats-shell">
+          <div className="section-head compact-section-head">
+            <span className="section-kicker">Protocol stats</span>
+            <h2>The live vault footprint stays visible from the landing page.</h2>
+            <p>
+              These numbers come from the same read path the dashboard uses. If the active RPC is not serving a live Ozlax vault yet,
+              the cards stay honest instead of pretending the protocol has data it cannot currently verify.
+            </p>
+          </div>
+
+          <div className="protocol-stats-grid">
+            <article className="glass-card protocol-stat-card">
+              <span>Total value locked</span>
+              <strong>{ozlax.tvl !== null ? formatCompactSol(ozlax.tvl) : "—"}</strong>
+              <p>Total SOL currently deposited in the vault.</p>
+            </article>
+            <article className="glass-card protocol-stat-card">
+              <span>Total yield distributed</span>
+              <strong>
+                {ozlax.vaultState ? formatSol(Number(ozlax.vaultState.totalYieldHarvested.toString()) / 1_000_000_000, 6) : "—"}
+              </strong>
+              <p>Lifetime harvested yield tracked on chain.</p>
+            </article>
+            <article className="glass-card protocol-stat-card">
+              <span>Active depositors</span>
+              <strong>—</strong>
+              <p>The current program does not track depositor count as a separate on-chain metric.</p>
+            </article>
+            <article className="glass-card protocol-stat-card">
+              <span>Protocol fee rate</span>
+              <strong>{`${formatWholePercent((ozlax.vaultState?.feeBps ?? 1000) / 100)}`}</strong>
+              <p>The treasury only earns when a harvest settles real protocol yield.</p>
+            </article>
           </div>
         </section>
 

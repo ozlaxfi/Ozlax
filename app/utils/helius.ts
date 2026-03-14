@@ -71,7 +71,7 @@ export const fetchWalletTransactions = async (address: string, rpcEndpoint?: str
     const response = await axios.get(
       `https://api.helius.xyz/v0/addresses/${address}/transactions`,
       {
-        params: { "api-key": apiKey, limit: 5 },
+        params: { "api-key": apiKey, limit: 10 },
         timeout: 10_000,
       },
     );
