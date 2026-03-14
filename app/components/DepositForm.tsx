@@ -1,7 +1,8 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 
 import type { ActionResult } from "../hooks/useOzlax";
 import { formatSol } from "../utils/format";
+import { useToast } from "./Toast";
 
 type Props = {
   onSubmit: (amount: number) => Promise<ActionResult>;
@@ -12,27 +13,31 @@ type Props = {
 
 export default function DepositForm({ onSubmit, loading, disabled, walletBalance }: Props) {
   const [amount, setAmount] = useState("");
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  useEffect(() => {
-    if (!loading) {
-      return;
-    }
-
-    setFeedback(null);
-  }, [loading]);
+  const { showToast } = useToast();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const parsedAmount = Number(amount);
 
     if (!Number.isFinite(parsedAmount) || parsedAmount < 0.01) {
-      setFeedback({ type: "error", message: "Enter at least 0.01 SOL to deposit." });
+      showToast({
+        tone: "error",
+        title: "Deposit blocked",
+        message: "Enter at least 0.01 SOL before sending the transaction.",
+      });
       return;
     }
 
     const result = await onSubmit(parsedAmount);
-    setFeedback({ type: result.ok ? "success" : "error", message: result.message });
+    if (result.ok) {
+      setAmount("");
+    }
+    showToast({
+      tone: result.ok ? "success" : "error",
+      title: result.ok ? "Deposit sent" : "Deposit failed",
+      message: result.message,
+      signature: result.signature,
+    });
   };
 
   return (
@@ -76,8 +81,6 @@ export default function DepositForm({ onSubmit, loading, disabled, walletBalance
       </div>
 
       <p className="form-note">Depositing settles pending rewards first, then increases your principal balance.</p>
-
-      {feedback ? <div className={`feedback-message feedback-${feedback.type}`}>{feedback.message}</div> : null}
 
       <button type="submit" disabled={disabled || loading} className="button-primary button-block">
         {loading ? "Depositing..." : "Deposit SOL"}

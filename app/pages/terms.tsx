@@ -136,7 +136,7 @@ export default function TermsPage() {
             <h2>11. Contact</h2>
             <p>
               Questions about these terms can be raised through the Ozlax community on{" "}
-              <a href="https://discord.gg/hZ4BE84qc3" target="_blank" rel="noreferrer">
+              <a href="https://discord.gg/hZ4BE84qc3" target="_blank" rel="noopener noreferrer">
                 Discord
               </a>
               .

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { ActionResult } from "../hooks/useOzlax";
 import { formatSol } from "../utils/format";
+import { useToast } from "./Toast";
 
 type Props = {
   onClick: () => Promise<ActionResult>;
@@ -11,11 +12,20 @@ type Props = {
 };
 
 export default function ClaimYieldButton({ onClick, loading, pendingYield, disabled }: Props) {
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [claimedAmount, setClaimedAmount] = useState<number | null>(null);
+  const { showToast } = useToast();
 
   const handleClick = async () => {
     const result = await onClick();
-    setFeedback({ type: result.ok ? "success" : "error", message: result.message });
+    if (result.ok) {
+      setClaimedAmount(result.amount ?? pendingYield);
+    }
+    showToast({
+      tone: result.ok ? "success" : "error",
+      title: result.ok ? "Claim sent" : "Claim failed",
+      message: result.message,
+      signature: result.signature,
+    });
   };
 
   return (
@@ -31,8 +41,7 @@ export default function ClaimYieldButton({ onClick, loading, pendingYield, disab
       <p className="form-note">
         Claiming pays out your accrued SOL rewards without reducing your deposited principal in the vault.
       </p>
-
-      {feedback ? <div className={`feedback-message feedback-${feedback.type}`}>{feedback.message}</div> : null}
+      {claimedAmount ? <p className="form-note">Your most recent claim request covered {formatSol(claimedAmount)}.</p> : null}
 
       <button
         type="button"
@@ -40,7 +49,7 @@ export default function ClaimYieldButton({ onClick, loading, pendingYield, disab
         className="button-primary button-block"
         onClick={() => void handleClick()}
       >
-        {loading ? "Claiming..." : pendingYield > 0 ? `Claim ${formatSol(pendingYield)}` : "Nothing to claim yet"}
+        {loading ? "Claiming..." : pendingYield > 0 ? `Claim ${formatSol(pendingYield)}` : "Yield settles here"}
       </button>
     </div>
   );

@@ -27,13 +27,13 @@ export default function DashboardPage() {
 
       if (!isHeliusConfigured()) {
         setTransactions([]);
-        setActivityMessage("Add a Helius API key if you want wallet history to appear here.");
+        setActivityMessage("Add a Helius API key and recent wallet history will appear here.");
         return;
       }
 
       const items = await fetchWalletTransactions(wallet.publicKey.toBase58());
       setTransactions(items.slice(0, 5));
-      setActivityMessage(items.length ? "" : "No recent transactions have shown up for this wallet yet.");
+      setActivityMessage(items.length ? "" : "Recent wallet activity will appear here once this address starts interacting on chain.");
     };
 
     void loadTransactions();
@@ -69,8 +69,8 @@ export default function DashboardPage() {
             <strong>Network view</strong>
             <span>
               {wallet.connected
-                ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not serving a live Ozlax vault."
-                : "Connect a wallet on devnet to move straight into the live Ozlax interface."}
+                ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not returning a live Ozlax vault yet."
+                : "Connect a wallet on devnet and the live Ozlax interface will take over from there."}
             </span>
           </div>
         )}

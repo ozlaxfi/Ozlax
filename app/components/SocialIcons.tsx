@@ -47,7 +47,15 @@ export function SocialIconRow({ className = "social-links", linkClassName = "soc
   return (
     <div className={className}>
       {SOCIAL_LINKS.map((item) => (
-        <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className={linkClassName} aria-label={item.label}>
+        <a
+          key={item.label}
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClassName}
+          aria-label={item.label}
+          title={item.label}
+        >
           <SocialIcon label={item.label} />
         </a>
       ))}

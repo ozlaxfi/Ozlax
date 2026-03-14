@@ -137,7 +137,7 @@ export default function Layout({
                 <div className="footer-link-list">
                   {footerLinks.map((item) =>
                     item.external ? (
-                      <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
+                      <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">
                         {item.label}
                       </a>
                     ) : (
@@ -169,7 +169,7 @@ export default function Layout({
 
           <div className="footer-bottom">
             <span>© 2026 Ozlax. All rights reserved.</span>
-            <a href="https://github.com/ozlaxfi/Ozlax" target="_blank" rel="noreferrer">
+            <a href="https://github.com/ozlaxfi/Ozlax" target="_blank" rel="noopener noreferrer">
               Open source on GitHub
             </a>
           </div>

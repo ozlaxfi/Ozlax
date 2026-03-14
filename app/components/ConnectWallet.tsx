@@ -30,6 +30,12 @@ export default function ConnectWallet({ className = "" }: Props) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!isConnected) {
+      setMenuOpen(false);
+    }
+  }, [isConnected]);
+
   const handleCopy = async () => {
     if (!address) {
       return;
@@ -46,13 +52,15 @@ export default function ConnectWallet({ className = "" }: Props) {
         type="button"
         className={`wallet-button ${className}`.trim()}
         onClick={() => (isConnected ? setMenuOpen((current) => !current) : setVisible(true))}
+        aria-haspopup={isConnected ? "menu" : "dialog"}
+        aria-expanded={isConnected ? menuOpen : false}
       >
         <span className={`wallet-status-dot${isConnected ? " wallet-status-live" : ""}`} />
         <span>{buttonLabel}</span>
       </button>
 
       {menuOpen && isConnected ? (
-        <div className="wallet-menu">
+        <div className="wallet-menu" role="menu">
           <div className="wallet-menu-copy">
             <span className="field-label">Connected wallet</span>
             <strong>{address}</strong>
@@ -62,10 +70,25 @@ export default function ConnectWallet({ className = "" }: Props) {
             <button type="button" className="button-secondary" onClick={() => void handleCopy()}>
               {copied ? "Address copied" : "Copy address"}
             </button>
-            <button type="button" className="button-secondary" onClick={() => setVisible(true)}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => {
+                setMenuOpen(false);
+                setVisible(true);
+              }}
+            >
               Change wallet
             </button>
-            <button type="button" className="button-primary" onClick={() => void disconnect()} disabled={disconnecting}>
+            <button
+              type="button"
+              className="button-primary"
+              onClick={() => {
+                setMenuOpen(false);
+                void disconnect();
+              }}
+              disabled={disconnecting}
+            >
               {disconnecting ? "Disconnecting..." : "Disconnect"}
             </button>
           </div>

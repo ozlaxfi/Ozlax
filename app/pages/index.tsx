@@ -176,19 +176,19 @@ export default function HomePage() {
               <a
                 href="https://marinade.finance"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="protocol-node protocol-node-a protocol-partner-link"
               >
                 Marinade
               </a>
-              <a href="https://www.ozlax.com" target="_blank" rel="noreferrer" className="protocol-core protocol-core-link">
+              <a href="https://www.ozlax.com" target="_blank" rel="noopener noreferrer" className="protocol-core protocol-core-link">
                 <img src="/logo.svg" alt="Ozlax Vault" className="protocol-core-logo" />
                 <span>Ozlax Vault</span>
               </a>
               <a
                 href="https://www.jito.network"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="protocol-node protocol-node-b protocol-partner-link"
               >
                 Jito
@@ -449,7 +449,13 @@ export default function HomePage() {
           <div className="community-icon-grid">
             {SOCIAL_LINKS.map((item) => (
               <article key={item.label} className="community-link-card">
-                <a href={item.href} target="_blank" rel="noreferrer" className="community-link-icon" aria-label={item.label}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="community-link-icon"
+                  aria-label={item.label}
+                >
                   <SocialIcon label={item.label} />
                 </a>
                 <div>

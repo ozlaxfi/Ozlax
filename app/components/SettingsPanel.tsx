@@ -61,7 +61,7 @@ export default function SettingsPanel({ walletAddress }: Props) {
         <a
           href={explorerUrlFor(walletAddress, network)}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="button-secondary"
         >
           View on Explorer
@@ -72,7 +72,7 @@ export default function SettingsPanel({ walletAddress }: Props) {
       </div>
 
       <div className="settings-socials">
-        <span className="field-label">Follow Ozlax</span>
+        <span className="field-label">Stay close to the protocol</span>
         <SocialIconRow className="settings-social-row" linkClassName="settings-social-link" />
       </div>
     </section>

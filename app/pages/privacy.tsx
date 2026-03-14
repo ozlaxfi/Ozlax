@@ -91,7 +91,7 @@ export default function PrivacyPage() {
             <h2>9. Contact</h2>
             <p>
               Questions about this Privacy Policy can be sent through the Ozlax community on{" "}
-              <a href="https://discord.gg/hZ4BE84qc3" target="_blank" rel="noreferrer">
+              <a href="https://discord.gg/hZ4BE84qc3" target="_blank" rel="noopener noreferrer">
                 Discord
               </a>
               .

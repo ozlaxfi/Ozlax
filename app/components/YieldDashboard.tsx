@@ -145,7 +145,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                       <td>{formatSol(transaction.amount, 4)}</td>
                       <td>{formatTimestamp(transaction.timestamp)}</td>
                       <td>
-                        <a href={transaction.explorerUrl} target="_blank" rel="noreferrer" className="table-link">
+                        <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
                           {shortenSignature(transaction.signature)}
                         </a>
                       </td>
@@ -156,7 +156,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                     <td colSpan={4} className="table-empty">
                       {heliusConfigured
                         ? activityMessage || "No recent transactions were returned for this wallet yet."
-                        : "Add a Helius API key if you want this dashboard to show recent wallet activity."}
+                        : "Add a Helius API key and recent wallet activity will appear here."}
                     </td>
                   </tr>
                 )}

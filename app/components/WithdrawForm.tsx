@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 
 import type { ActionResult } from "../hooks/useOzlax";
 import { formatSol } from "../utils/format";
+import { useToast } from "./Toast";
 
 type Props = {
   onSubmit: (amount: number) => Promise<ActionResult>;
@@ -12,24 +13,40 @@ type Props = {
 
 export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }: Props) {
   const [amount, setAmount] = useState("");
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { showToast } = useToast();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const parsedAmount = Number(amount);
 
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setFeedback({ type: "error", message: "Enter a valid withdrawal amount." });
+      showToast({
+        tone: "error",
+        title: "Withdrawal blocked",
+        message: "Enter a valid amount before sending the transaction.",
+      });
       return;
     }
 
     if (maxAmount !== null && maxAmount !== undefined && parsedAmount > maxAmount) {
-      setFeedback({ type: "error", message: "Withdrawal amount exceeds your deposited balance." });
+      showToast({
+        tone: "error",
+        title: "Withdrawal blocked",
+        message: "That amount is larger than your deposited balance.",
+      });
       return;
     }
 
     const result = await onSubmit(parsedAmount);
-    setFeedback({ type: result.ok ? "success" : "error", message: result.message });
+    if (result.ok) {
+      setAmount("");
+    }
+    showToast({
+      tone: result.ok ? "success" : "error",
+      title: result.ok ? "Withdrawal sent" : "Withdrawal failed",
+      message: result.message,
+      signature: result.signature,
+    });
   };
 
   return (
@@ -73,8 +90,6 @@ export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }:
       </div>
 
       <p className="form-note">Withdrawals settle pending rewards first, then reduce your deposited SOL position.</p>
-
-      {feedback ? <div className={`feedback-message feedback-${feedback.type}`}>{feedback.message}</div> : null}
 
       <button type="submit" disabled={disabled || loading} className="button-secondary button-block">
         {loading ? "Withdrawing..." : "Withdraw SOL"}
