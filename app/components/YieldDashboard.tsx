@@ -1,167 +1,148 @@
 import { HeliusTransaction } from "../utils/helius";
-import { formatNumber, formatPercent, formatSol, formatTimestamp, shortenAddress } from "../utils/format";
+import {
+  formatCompactSol,
+  formatPercent,
+  formatSlot,
+  formatSol,
+  formatTimestamp,
+  formatWholePercent,
+  shortenAddress,
+  shortenSignature,
+} from "../utils/format";
 
-type Props = {
-  ozlax: {
-    userPosition: any;
-    vaultState: any;
-    pendingYield: number;
-    weightedApy: number;
-    tvl: number;
-    isFallback: boolean;
-  };
-  walletAddress: string;
-  transactions: HeliusTransaction[];
+type OzlaxState = {
+  userPosition: any;
+  vaultState: any;
+  pendingYield: number;
+  weightedApy: number | null;
+  tvl: number | null;
+  isPreview: boolean;
+  isRefreshing: boolean;
 };
 
-const stat = (label: string, value: string, tone?: "success" | "neutral") => (
-  <div className={`stat-card panel${tone === "success" ? " stat-card-success" : ""}`} key={label}>
+type Props = {
+  ozlax: OzlaxState;
+  walletAddress?: string;
+  transactions: HeliusTransaction[];
+  heliusConfigured: boolean;
+  activityMessage: string;
+};
+
+const metric = (label: string, value: string, tone?: "accent" | "positive") => (
+  <article className={`glass-card metric-card${tone ? ` metric-card-${tone}` : ""}`} key={label}>
     <span>{label}</span>
     <strong>{value}</strong>
-  </div>
+  </article>
 );
 
-export default function YieldDashboard({ ozlax, walletAddress, transactions }: Props) {
+export default function YieldDashboard({ ozlax, walletAddress, transactions, heliusConfigured, activityMessage }: Props) {
   const deposited = Number(ozlax.userPosition?.depositedAmount?.toString?.() || 0) / 1_000_000_000;
   const claimed = Number(ozlax.userPosition?.yieldEarnedClaimed?.toString?.() || 0) / 1_000_000_000;
-  const totalHarvested = Number(ozlax.vaultState?.totalYieldHarvested?.toString?.() || 0) / 1_000_000_000;
   const feeBps = ozlax.vaultState?.feeBps ?? 1000;
-  const marinadePct = ozlax.vaultState?.marinadePct ?? 50;
-  const jitoPct = ozlax.vaultState?.jitoPct ?? 50;
+  const marinadePct = ozlax.vaultState?.marinadePct ?? null;
+  const jitoPct = ozlax.vaultState?.jitoPct ?? null;
+  const lastHarvestSlot = ozlax.vaultState?.lastHarvestSlot ?? null;
 
   return (
-    <div className="metrics-column">
-      <div className="dashboard-summary panel">
-        <div className="dashboard-summary-head">
-          <div>
-            <span className="card-eyebrow">Position overview</span>
-            <h3>Vault + wallet state</h3>
-          </div>
-          <span className="status-pill">{ozlax.isFallback ? "Preview mode" : "Live state"}</span>
-        </div>
-        <div className="summary-grid">
-          <div className="summary-cell">
-            <span>Connected wallet</span>
-            <strong>{shortenAddress(walletAddress)}</strong>
-          </div>
-          <div className="summary-cell">
-            <span>Current TVL</span>
-            <strong>{formatSol(ozlax.tvl)}</strong>
-          </div>
-          <div className="summary-cell">
-            <span>Total harvested</span>
-            <strong>{formatSol(totalHarvested)}</strong>
-          </div>
-          <div className="summary-cell">
-            <span>Protocol fee</span>
-            <strong>{(feeBps / 100).toFixed(2)}%</strong>
-          </div>
-        </div>
+    <div className="dashboard-stack">
+      <div className="metrics-grid">
+        {metric("Your Deposited SOL", formatSol(deposited), "accent")}
+        {metric("Pending Yield", formatSol(ozlax.pendingYield), "positive")}
+        {metric("Total Claimed", formatSol(claimed))}
+        {metric("Protocol TVL", formatCompactSol(ozlax.tvl))}
       </div>
 
-      <div className="stats-grid">
-        {stat("Deposited SOL", formatSol(deposited))}
-        {stat("Pending Yield", formatSol(ozlax.pendingYield), "success")}
-        {stat("Yield Claimed", formatSol(claimed))}
-        {stat("Weighted APY", formatPercent(ozlax.weightedApy))}
-      </div>
+      <div className="dashboard-detail-grid">
+        <section className="glass-card vault-status-card">
+          <div className="section-title-row">
+            <div>
+              <span className="card-eyebrow">Vault status</span>
+              <h3>Live protocol state</h3>
+            </div>
+            <span className={`status-chip${ozlax.isPreview ? " status-chip-muted" : ""}`}>
+              {ozlax.isPreview ? "Preview" : ozlax.isRefreshing ? "Refreshing" : "Live"}
+            </span>
+          </div>
 
-      <div className="dashboard-lower-grid">
-        <div className="panel protocol-state-card">
-          <div className="card-head">
+          <div className="status-grid">
             <div>
-              <span className="card-eyebrow">Protocol state</span>
-              <h3>Vault execution model</h3>
+              <span>Weighted APY</span>
+              <strong>{formatPercent(ozlax.weightedApy)}</strong>
             </div>
-            <span className="card-hint">{ozlax.isFallback ? "Preview-safe" : "Chain-backed"}</span>
+            <div>
+              <span>Fee rate</span>
+              <strong>{formatWholePercent(feeBps / 100)}</strong>
+            </div>
+            <div>
+              <span>Marinade allocation</span>
+              <strong>{formatWholePercent(marinadePct)}</strong>
+            </div>
+            <div>
+              <span>Jito allocation</span>
+              <strong>{formatWholePercent(jitoPct)}</strong>
+            </div>
+            <div>
+              <span>Last harvest slot</span>
+              <strong>{formatSlot(lastHarvestSlot)}</strong>
+            </div>
+            <div>
+              <span>Connected wallet</span>
+              <strong>{walletAddress ? shortenAddress(walletAddress) : "Preview only"}</strong>
+            </div>
           </div>
-          <div className="protocol-state-grid">
-            <div className="summary-cell">
-              <span>Harvest cadence</span>
-              <strong>Every 24h</strong>
-            </div>
-            <div className="summary-cell">
-              <span>Treasury take</span>
-              <strong>{(feeBps / 100).toFixed(2)}%</strong>
-            </div>
-            <div className="summary-cell">
-              <span>Settlement</span>
-              <strong>Reward-per-share</strong>
-            </div>
-            <div className="summary-cell">
-              <span>User iteration</span>
-              <strong>None on harvest</strong>
-            </div>
-          </div>
-        </div>
 
-        <div className="panel strategy-state-card">
-          <div className="card-head">
-            <div>
-              <span className="card-eyebrow">Allocation</span>
-              <h3>Current strategy split</h3>
-            </div>
-            <span className="card-hint">Vault target exposure</span>
-          </div>
-          <div className="allocation-bars">
-            <div>
-              <div className="bar-label">
-                <span>Marinade</span>
-                <strong>{marinadePct}%</strong>
-              </div>
-              <div className="progress-rail">
-                <span style={{ width: `${marinadePct}%` }} />
-              </div>
-            </div>
-            <div>
-              <div className="bar-label">
-                <span>Jito</span>
-                <strong>{jitoPct}%</strong>
-              </div>
-              <div className="progress-rail progress-rail-alt">
-                <span style={{ width: `${jitoPct}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
+          <p className="supporting-copy">
+            Harvest cadence is executed by the keeper. The current on-chain account model does not store a dedicated harvest timestamp,
+            so the UI treats that field conservatively unless a live slot becomes available.
+          </p>
+        </section>
 
-        <div className="panel history-card">
-          <div className="card-head">
+        <section className="glass-card activity-card">
+          <div className="section-title-row">
             <div>
-              <span className="card-eyebrow">Activity</span>
-              <h3>Recent wallet transactions</h3>
+              <span className="card-eyebrow">Recent activity</span>
+              <h3>Wallet transactions</h3>
             </div>
-            <span className="card-hint">{formatNumber(transactions.length)} items</span>
+            <span className="card-hint">{transactions.length} / 5</span>
           </div>
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Description</th>
-                <th>Fee</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <tr key={transaction.signature}>
-                    <td>{formatTimestamp(transaction.timestamp)}</td>
-                    <td>{transaction.description}</td>
-                    <td>{formatSol(transaction.fee / 1_000_000_000)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="history-empty-row">
-                  <td colSpan={3}>
-                    {ozlax.isFallback
-                      ? "Preview mode is active. Recent wallet transactions appear here after live interaction data is available."
-                      : "No recent transactions available for this wallet yet."}
-                  </td>
+
+          <div className="table-shell">
+            <table className="activity-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Time</th>
+                  <th>Signature</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {transactions.length > 0 ? (
+                  transactions.map((transaction) => (
+                    <tr key={transaction.signature}>
+                      <td>{transaction.type}</td>
+                      <td>{formatSol(transaction.amount, 4)}</td>
+                      <td>{formatTimestamp(transaction.timestamp)}</td>
+                      <td>
+                        <a href={transaction.explorerUrl} target="_blank" rel="noreferrer" className="table-link">
+                          {shortenSignature(transaction.signature)}
+                        </a>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="table-empty">
+                      {heliusConfigured
+                        ? activityMessage || "No recent transactions were returned for this wallet yet."
+                        : "Set NEXT_PUBLIC_HELIUS_API_KEY to load recent wallet activity from Helius."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </div>
   );

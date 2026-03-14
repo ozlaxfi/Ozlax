@@ -1,8 +1,6 @@
-export const formatSol = (value: number) => `${value.toFixed(4)} SOL`;
+const numberFormatter = new Intl.NumberFormat("en-US");
 
-export const formatPercent = (value: number) => `${(value * 100).toFixed(2)}%`;
-
-export const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
+export const formatNumber = (value: number) => numberFormatter.format(value);
 
 export const formatCompactNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en-US", {
@@ -10,18 +8,66 @@ export const formatCompactNumber = (value: number, maximumFractionDigits = 1) =>
     maximumFractionDigits,
   }).format(value);
 
-export const formatTimestamp = (value: number) => {
+export const formatSol = (value?: number | null, fractionDigits = 4) => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "—";
+  }
+
+  return `${value.toFixed(fractionDigits)} SOL`;
+};
+
+export const formatCompactSol = (value?: number | null, fractionDigits = 2) => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "—";
+  }
+
+  return `${formatCompactNumber(value, fractionDigits)} SOL`;
+};
+
+export const formatPercent = (value?: number | null, fractionDigits = 2) => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "—";
+  }
+
+  return `${(value * 100).toFixed(fractionDigits)}%`;
+};
+
+export const formatWholePercent = (value?: number | null) => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "—";
+  }
+
+  return `${value}%`;
+};
+
+export const formatTimestamp = (value?: number | null) => {
   if (!value) {
-    return "Pending";
+    return "Unavailable";
   }
 
   return new Date(value * 1000).toLocaleString();
 };
 
-export const shortenAddress = (value: string) => {
+export const formatSlot = (value?: number | null) => {
+  if (!value) {
+    return "Not tracked";
+  }
+
+  return `Slot ${formatNumber(value)}`;
+};
+
+export const shortenAddress = (value?: string | null) => {
   if (!value) {
     return "Not connected";
   }
 
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
+};
+
+export const shortenSignature = (value?: string | null) => {
+  if (!value) {
+    return "—";
+  }
+
+  return `${value.slice(0, 6)}...${value.slice(-6)}`;
 };

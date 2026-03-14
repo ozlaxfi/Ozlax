@@ -5,32 +5,75 @@ import { useEffect, useState } from "react";
 
 import { getProgram } from "../utils/anchor";
 
+const MIN_DEPOSIT_SOL = 0.01;
 const MARINADE_ESTIMATED_APY = 0.072;
 const JITO_ESTIMATED_APY = 0.081;
 const ACC_PRECISION = 1_000_000_000_000n;
-const DEMO_TVL = 182.46;
 
-const demoVaultState = {
-  totalDeposited: new BN(Math.round(DEMO_TVL * LAMPORTS_PER_SOL)),
-  totalYieldHarvested: new BN(Math.round(8.12 * LAMPORTS_PER_SOL)),
-  accYieldPerShare: new BN("431125000000"),
-  feeBps: 1000,
-  marinadePct: 58,
-  jitoPct: 42,
+type ActionName = "deposit" | "withdraw" | "claimYield" | null;
+
+export type ActionResult = {
+  ok: boolean;
+  message: string;
+  signature?: string;
+  amount?: number;
+};
+
+type VaultState = {
+  totalDeposited: BN;
+  totalYieldHarvested: BN;
+  accYieldPerShare: BN;
+  feeBps: number;
+  marinadePct: number;
+  jitoPct: number;
+};
+
+type UserPosition = {
+  depositedAmount: BN;
+  rewardDebt: BN;
+  yieldEarnedClaimed: BN;
+  lastHarvestSlot: BN;
+};
+
+const lamportsToSol = (lamports: string | number | bigint) => Number(lamports) / LAMPORTS_PER_SOL;
+
+const describeError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes("DepositTooSmall")) {
+    return "Deposits must be at least 0.01 SOL.";
+  }
+  if (message.includes("InsufficientDeposit")) {
+    return "That withdrawal is larger than your deposited balance.";
+  }
+  if (message.includes("NoYieldAvailable")) {
+    return "There is no yield available to claim right now.";
+  }
+  if (message.includes("WalletSignTransactionError")) {
+    return "The transaction was cancelled in your wallet.";
+  }
+  if (message.includes("failed to fetch") || message.includes("NetworkError")) {
+    return "The RPC request failed. Please retry once the connection is stable.";
+  }
+
+  return message;
 };
 
 export const useOzlax = () => {
   const { connection } = useConnection();
   const wallet = useWallet();
-  const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(true);
+  const [actionLoading, setActionLoading] = useState<ActionName>(null);
   const [error, setError] = useState("");
   const [statusNote, setStatusNote] = useState("");
-  const [userPosition, setUserPosition] = useState<any>(null);
-  const [vaultState, setVaultState] = useState<any>(null);
+  const [previewReason, setPreviewReason] = useState("");
+  const [userPosition, setUserPosition] = useState<UserPosition | null>(null);
+  const [vaultState, setVaultState] = useState<VaultState | null>(null);
   const [pendingYield, setPendingYield] = useState(0);
-  const [weightedApy, setWeightedApy] = useState(0);
-  const [tvl, setTvl] = useState(0);
-  const [isFallback, setIsFallback] = useState(false);
+  const [weightedApy, setWeightedApy] = useState<number | null>(null);
+  const [tvl, setTvl] = useState<number | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [isPreview, setIsPreview] = useState(false);
 
   const getPdas = () => {
     const program = getProgram(connection, wallet as any);
@@ -45,50 +88,79 @@ export const useOzlax = () => {
   };
 
   const refresh = async () => {
+    setIsRefreshing(true);
+    setError("");
+
     try {
       const { program, vaultPda, userPositionPda } = getPdas();
-      let nextVaultState: any = demoVaultState;
-      let usingFallback = false;
+      let nextVaultState: VaultState | null = null;
 
       try {
-        nextVaultState = await program.account.vaultState.fetch(vaultPda);
+        nextVaultState = (await program.account.vaultState.fetch(vaultPda)) as VaultState;
       } catch {
-        usingFallback = true;
+        nextVaultState = null;
       }
 
-      setVaultState(nextVaultState);
-      setTvl(Number(nextVaultState.totalDeposited.toString()) / LAMPORTS_PER_SOL);
-      setIsFallback(usingFallback);
-      setStatusNote(
-        usingFallback
-          ? "Vault state is not available on the current RPC yet. The dashboard is showing a protocol preview so the interface stays usable while the vault is uninitialized or the frontend program config is still pointed at preview values."
-          : "Vault state loaded from chain.",
-      );
-
-      const apy =
-        (MARINADE_ESTIMATED_APY * nextVaultState.marinadePct + JITO_ESTIMATED_APY * nextVaultState.jitoPct) / 100;
-      setWeightedApy(apy);
-
-      if (!wallet.publicKey || usingFallback) {
+      if (!nextVaultState) {
+        setVaultState(null);
+        setTvl(null);
+        setWeightedApy(null);
+        setIsPreview(true);
+        setPreviewReason("Preview Mode — Connect to devnet to interact with the protocol.");
+        setStatusNote("Vault state is not available on the current RPC endpoint yet.");
         setUserPosition(null);
         setPendingYield(0);
-        return;
+      } else {
+        setVaultState(nextVaultState);
+        setTvl(lamportsToSol(nextVaultState.totalDeposited.toString()));
+        setWeightedApy(
+          (MARINADE_ESTIMATED_APY * nextVaultState.marinadePct + JITO_ESTIMATED_APY * nextVaultState.jitoPct) / 100,
+        );
+        setIsPreview(false);
+        setPreviewReason("");
+        setStatusNote("Live vault state loaded from chain.");
+
+        if (wallet.publicKey) {
+          try {
+            const nextUserPosition = (await program.account.userPosition.fetch(userPositionPda)) as UserPosition;
+            setUserPosition(nextUserPosition);
+
+            const deposited = BigInt(nextUserPosition.depositedAmount.toString());
+            const accYieldPerShare = BigInt(nextVaultState.accYieldPerShare.toString());
+            const rewardDebt = BigInt(nextUserPosition.rewardDebt.toString());
+            const accruedLamports = deposited * accYieldPerShare / ACC_PRECISION;
+            const pendingLamports = accruedLamports > rewardDebt ? accruedLamports - rewardDebt : 0n;
+
+            setPendingYield(Number(pendingLamports) / LAMPORTS_PER_SOL);
+          } catch {
+            setUserPosition(null);
+            setPendingYield(0);
+          }
+        } else {
+          setUserPosition(null);
+          setPendingYield(0);
+        }
       }
 
-      try {
-        const nextUserPosition = await program.account.userPosition.fetch(userPositionPda);
-        setUserPosition(nextUserPosition);
-        const deposited = BigInt(nextUserPosition.depositedAmount.toString());
-        const accYieldPerShare = BigInt(nextVaultState.accYieldPerShare.toString());
-        const rewardDebt = BigInt(nextUserPosition.rewardDebt.toString());
-        const pending = Number((deposited * accYieldPerShare) / ACC_PRECISION - rewardDebt) / LAMPORTS_PER_SOL;
-        setPendingYield(Math.max(0, pending));
-      } catch {
-        setUserPosition(null);
-        setPendingYield(0);
+      if (wallet.publicKey) {
+        const balanceLamports = await connection.getBalance(wallet.publicKey, "confirmed");
+        setWalletBalance(balanceLamports / LAMPORTS_PER_SOL);
+      } else {
+        setWalletBalance(null);
       }
     } catch (refreshError) {
-      setError((refreshError as Error).message);
+      setError(describeError(refreshError));
+      setStatusNote("The frontend could not read current vault state from the selected RPC endpoint.");
+      setIsPreview(true);
+      setPreviewReason("Preview Mode — Connect to devnet to interact with the protocol.");
+      setVaultState(null);
+      setTvl(null);
+      setWeightedApy(null);
+      setUserPosition(null);
+      setPendingYield(0);
+      setWalletBalance(null);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -96,95 +168,127 @@ export const useOzlax = () => {
     void refresh();
   }, [wallet.publicKey?.toBase58(), connection.rpcEndpoint]);
 
-  const deposit = async (amount: number) => {
+  const requireLiveWallet = () => {
     if (!wallet.publicKey) {
-      setError("Connect a wallet first.");
-      return;
+      return "Connect a wallet to interact with the vault.";
     }
-    if (isFallback) {
-      setError("The vault is not initialized on this cluster yet. Deploy and initialize it before accepting live deposits.");
-      return;
+    if (isPreview || !vaultState) {
+      return "Preview Mode — Connect to devnet to interact with the protocol.";
     }
 
-    setLoading(true);
+    return null;
+  };
+
+  const runAction = async (
+    action: Exclude<ActionName, null>,
+    callback: () => Promise<string>,
+    successMessage: string,
+    amount?: number,
+  ): Promise<ActionResult> => {
+    setActionLoading(action);
     setError("");
+
     try {
-      const { program, vaultPda, userPositionPda } = getPdas();
-      await program.methods
-        .deposit(new BN(Math.round(amount * LAMPORTS_PER_SOL)))
-        .accounts({
-          vault: vaultPda,
-          userPosition: userPositionPda,
-          user: wallet.publicKey,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc();
+      const signature = await callback();
       await refresh();
+      return { ok: true, message: successMessage, signature, amount };
     } catch (submitError) {
-      setError((submitError as Error).message);
+      const message = describeError(submitError);
+      setError(message);
+      return { ok: false, message };
     } finally {
-      setLoading(false);
+      setActionLoading(null);
     }
   };
 
-  const withdraw = async (amount: number) => {
-    if (!wallet.publicKey) {
-      setError("Connect a wallet first.");
-      return;
+  const deposit = async (amount: number): Promise<ActionResult> => {
+    const blocker = requireLiveWallet();
+    if (blocker) {
+      setError(blocker);
+      return { ok: false, message: blocker };
     }
-    if (isFallback) {
-      setError("The vault is not initialized on this cluster yet. Withdrawals are unavailable in preview mode.");
-      return;
+    if (!Number.isFinite(amount) || amount < MIN_DEPOSIT_SOL) {
+      const message = "Deposits must be at least 0.01 SOL.";
+      setError(message);
+      return { ok: false, message };
     }
 
-    setLoading(true);
-    setError("");
-    try {
-      const { program, vaultPda, userPositionPda } = getPdas();
-      await program.methods
-        .withdraw(new BN(Math.round(amount * LAMPORTS_PER_SOL)))
-        .accounts({
-          vault: vaultPda,
-          userPosition: userPositionPda,
-          user: wallet.publicKey,
-        })
-        .rpc();
-      await refresh();
-    } catch (submitError) {
-      setError((submitError as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    const { program, vaultPda, userPositionPda } = getPdas();
+    return runAction(
+      "deposit",
+      () =>
+        program.methods
+          .deposit(new BN(Math.round(amount * LAMPORTS_PER_SOL)))
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: wallet.publicKey!,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc(),
+      `Deposit submitted for ${amount.toFixed(2)} SOL.`,
+      amount,
+    );
   };
 
-  const claimYield = async () => {
-    if (!wallet.publicKey) {
-      setError("Connect a wallet first.");
-      return;
+  const withdraw = async (amount: number): Promise<ActionResult> => {
+    const blocker = requireLiveWallet();
+    if (blocker) {
+      setError(blocker);
+      return { ok: false, message: blocker };
     }
-    if (isFallback) {
-      setError("The vault is not initialized on this cluster yet. Claims are unavailable in preview mode.");
-      return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      const message = "Enter a valid withdrawal amount.";
+      setError(message);
+      return { ok: false, message };
     }
 
-    setLoading(true);
-    setError("");
-    try {
-      const { program, vaultPda, userPositionPda } = getPdas();
-      await program.methods
-        .claimYield()
-        .accounts({
-          vault: vaultPda,
-          userPosition: userPositionPda,
-          user: wallet.publicKey,
-        })
-        .rpc();
-      await refresh();
-    } catch (submitError) {
-      setError((submitError as Error).message);
-    } finally {
-      setLoading(false);
+    const { program, vaultPda, userPositionPda } = getPdas();
+    return runAction(
+      "withdraw",
+      () =>
+        program.methods
+          .withdraw(new BN(Math.round(amount * LAMPORTS_PER_SOL)))
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: wallet.publicKey!,
+          })
+          .rpc(),
+      `Withdrawal submitted for ${amount.toFixed(2)} SOL.`,
+      amount,
+    );
+  };
+
+  const claimYield = async (): Promise<ActionResult> => {
+    const blocker = requireLiveWallet();
+    if (blocker) {
+      setError(blocker);
+      return { ok: false, message: blocker };
     }
+    if (pendingYield <= 0) {
+      const message = "There is no yield available to claim right now.";
+      setError(message);
+      return { ok: false, message };
+    }
+
+    const { program, vaultPda, userPositionPda } = getPdas();
+    const amount = pendingYield;
+
+    return runAction(
+      "claimYield",
+      () =>
+        program.methods
+          .claimYield()
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: wallet.publicKey!,
+          })
+          .rpc(),
+      `Claim submitted for ${amount.toFixed(4)} SOL.`,
+      amount,
+    );
   };
 
   return {
@@ -192,14 +296,17 @@ export const useOzlax = () => {
     withdraw,
     claimYield,
     refresh,
-    loading,
+    isRefreshing,
+    actionLoading,
     error,
     statusNote,
+    previewReason,
     userPosition,
     vaultState,
     pendingYield,
     weightedApy,
     tvl,
-    isFallback,
+    walletBalance,
+    isPreview,
   };
 };

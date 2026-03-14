@@ -5,6 +5,10 @@ const WalletMultiButton = dynamic(
   { ssr: false },
 );
 
-export default function ConnectWallet() {
-  return <WalletMultiButton className="wallet-button" />;
+type Props = {
+  className?: string;
+};
+
+export default function ConnectWallet({ className = "" }: Props) {
+  return <WalletMultiButton className={`wallet-button ${className}`.trim()} />;
 }

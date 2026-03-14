@@ -1,41 +1,83 @@
 import { FormEvent, useState } from "react";
 
+import type { ActionResult } from "../hooks/useOzlax";
+import { formatSol } from "../utils/format";
+
 type Props = {
-  onSubmit: (amount: number) => Promise<void>;
+  onSubmit: (amount: number) => Promise<ActionResult>;
   loading: boolean;
+  disabled: boolean;
+  maxAmount?: number | null;
 };
 
-export default function WithdrawForm({ onSubmit, loading }: Props) {
-  const [amount, setAmount] = useState("0.05");
+export default function WithdrawForm({ onSubmit, loading, disabled, maxAmount }: Props) {
+  const [amount, setAmount] = useState("");
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await onSubmit(Number(amount));
+    const parsedAmount = Number(amount);
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setFeedback({ type: "error", message: "Enter a valid withdrawal amount." });
+      return;
+    }
+
+    if (maxAmount !== null && maxAmount !== undefined && parsedAmount > maxAmount) {
+      setFeedback({ type: "error", message: "Withdrawal amount exceeds your deposited balance." });
+      return;
+    }
+
+    const result = await onSubmit(parsedAmount);
+    setFeedback({ type: result.ok ? "success" : "error", message: result.message });
   };
 
   return (
-    <form className="panel action-card" onSubmit={handleSubmit}>
+    <form className="glass-card action-card" onSubmit={handleSubmit}>
       <div className="card-head">
         <div>
-          <span className="card-eyebrow">Liquidity</span>
-          <h3>Withdraw SOL</h3>
+          <span className="card-eyebrow">Withdraw</span>
+          <h3>Redeem principal</h3>
         </div>
-        <span className="card-hint">Principal stays liquid</span>
+        <span className="card-hint">Claimable anytime</span>
       </div>
-      <label className="field-wrap">
-        <span>Amount</span>
-        <input
-          type="number"
-          min="0.01"
-          step="0.01"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          className="glass-input"
-        />
+
+      <label className="field-group">
+        <span className="field-label">Amount</span>
+        <div className="field-input-row">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            className="field-input"
+            placeholder="0.05"
+            disabled={disabled || loading}
+          />
+          <button
+            type="button"
+            className="field-action"
+            disabled={disabled || loading || !maxAmount}
+            onClick={() => setAmount(maxAmount ? maxAmount.toFixed(4) : "")}
+          >
+            Max
+          </button>
+        </div>
       </label>
-      <p className="form-note">Withdrawals settle earned yield first, then reduce your principal position.</p>
-      <button type="submit" disabled={loading} className="secondary-button">
-        {loading ? "Submitting..." : "Withdraw"}
+
+      <div className="form-meta">
+        <span>Deposited</span>
+        <strong>{formatSol(maxAmount)}</strong>
+      </div>
+
+      <p className="form-note">Withdrawals settle pending rewards first, then reduce your deposited SOL position.</p>
+
+      {feedback ? <div className={`feedback-message feedback-${feedback.type}`}>{feedback.message}</div> : null}
+
+      <button type="submit" disabled={disabled || loading} className="button-secondary button-block">
+        {loading ? "Withdrawing..." : "Withdraw SOL"}
       </button>
     </form>
   );
