@@ -23,7 +23,7 @@ The contract never loops across all depositors on-chain. Reward distribution sta
 
 One program and one global vault PDA keep rent and deployment cost low. User accounting uses a reward-debt pattern adapted for SOL, and SOL stays in the vault PDA in this MVP so devnet flows and testing stay simple.
 
-Keeper APY collection uses SDK-first lookups with API and static fallbacks because current SDK versions do not expose a stable cross-provider APY surface. The frontend reads state directly from Anchor accounts, supports Phantom, Solflare, Coinbase, and wallet-standard auto-detection, and uses toast notifications plus Helius-backed recent wallet activity when an API key is present.
+Keeper APY collection uses SDK-first lookups with API and static fallbacks because current SDK versions do not expose a stable cross-provider APY surface. The frontend reads state directly from Anchor accounts, supports Phantom, Solflare, Coinbase, and wallet-standard auto-detection, and uses toast notifications plus Helius-backed recent wallet activity when an API key is present. The dashboard now exposes a live network badge, copy-to-clipboard actions for operational values, and a visible frontend version marker so operators can tell exactly what environment and build they are looking at.
 
 ## Tech Stack
 
@@ -80,13 +80,22 @@ Set your Helius RPC, keeper keypair path, treasury wallet, program id, and OZX m
 anchor build
 ```
 
-### 5. Run tests
+### 5. Validate the localnet workflow and run tests
 
 ```bash
-anchor test --skip-build
+solana-test-validator --reset &
+sleep 5
+solana config set --url http://localhost:8899
+solana airdrop 100 --url http://localhost:8899
+anchor deploy --provider.cluster localnet
+npx tsx scripts/initialize-vault.ts
+npx tsx scripts/verify-deploy.ts
+NETWORK=http://localhost:8899 bash scripts/deploy-token.sh
+npx ts-node keeper/bot.ts --once --dry-run
+anchor test --provider.cluster localnet --skip-local-validator
 ```
 
-The integration suite now covers 16 end-to-end cases, including multi-user reward distribution, repeated harvest accumulation, and full-withdraw edge cases.
+That localnet path now validates the full operational pipeline before the integration suite runs. The test suite covers 17 end-to-end cases, including multi-user reward distribution, repeated harvest accumulation, full-withdraw edge cases, and a three-user rapid deposit-harvest-claim stress cycle.
 
 ### 6. Start the frontend
 
@@ -110,6 +119,10 @@ bash scripts/deploy-token.sh
 ```
 
 That script creates the 9-decimal OZX mint, mints the fixed one billion supply, and revokes mint authority once distribution is complete.
+
+## Current Deployment Status
+
+The localnet workflow is fully validated and the frontend is production-ready from a UX perspective, but the real devnet deployment is still blocked by faucet funding. The deploy wallet remains unfunded after repeated public-faucet and alternate-RPC attempts, so live devnet addresses have not been written into the repo yet.
 
 ## Deploy to Mainnet (One Config Change)
 

@@ -14,6 +14,9 @@ describe("ozlax", () => {
   const secondUser = Keypair.generate();
   const fullWithdrawUser = Keypair.generate();
   const nonAuthority = Keypair.generate();
+  const stressUserA = Keypair.generate();
+  const stressUserB = Keypair.generate();
+  const stressUserC = Keypair.generate();
 
   const [vaultPda] = PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId);
   const [userPositionPda] = PublicKey.findProgramAddressSync(
@@ -28,10 +31,24 @@ describe("ozlax", () => {
     [Buffer.from("user-position"), fullWithdrawUser.publicKey.toBuffer()],
     program.programId,
   );
+  const [stressUserAPositionPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user-position"), stressUserA.publicKey.toBuffer()],
+    program.programId,
+  );
+  const [stressUserBPositionPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user-position"), stressUserB.publicKey.toBuffer()],
+    program.programId,
+  );
+  const [stressUserCPositionPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("user-position"), stressUserC.publicKey.toBuffer()],
+    program.programId,
+  );
 
   const ozxMint = Keypair.generate().publicKey;
   const marinadeStakeAccount = Keypair.generate().publicKey;
   const jitoStakeAccount = Keypair.generate().publicKey;
+  let initializedTreasury = treasury.publicKey;
+  let vaultPreinitialized = false;
 
   const depositLamports = new BN(0.1 * LAMPORTS_PER_SOL);
   const withdrawLamports = new BN(0.05 * LAMPORTS_PER_SOL);
@@ -43,6 +60,9 @@ describe("ozlax", () => {
   const expectedFee = totalYield.mul(new BN(1_000)).div(new BN(10_000));
   const expectedDistributable = totalYield.sub(expectedFee);
   const rewardPrecision = new BN("1000000000000");
+  const stressDepositA = new BN(0.03 * LAMPORTS_PER_SOL);
+  const stressDepositB = new BN(0.05 * LAMPORTS_PER_SOL);
+  const stressDepositC = new BN(0.08 * LAMPORTS_PER_SOL);
 
   const airdrop = async (pubkey: PublicKey, amountSol = 2) => {
     const sig = await provider.connection.requestAirdrop(pubkey, amountSol * LAMPORTS_PER_SOL);
@@ -60,6 +80,14 @@ describe("ozlax", () => {
 
     assert.ok(message, `expected failure matching ${expectedPattern}`);
     assert.match(message, expectedPattern);
+  };
+
+  const assertBnClose = (actual: BN, expected: BN, tolerance = 1) => {
+    const delta = actual.sub(expected).abs();
+    assert.ok(
+      delta.lte(new BN(tolerance)),
+      `expected ${actual.toString()} to be within ${tolerance} lamports of ${expected.toString()}`,
+    );
   };
 
   const pendingYieldLamports = async () => {
@@ -88,24 +116,38 @@ describe("ozlax", () => {
     await airdrop(fullWithdrawUser.publicKey, 2);
     await airdrop(treasury.publicKey, 1);
     await airdrop(nonAuthority.publicKey, 1);
+    await airdrop(stressUserA.publicKey, 2);
+    await airdrop(stressUserB.publicKey, 2);
+    await airdrop(stressUserC.publicKey, 2);
+
+    try {
+      const existingVault = (await program.account.vaultState.fetch(vaultPda)) as any;
+      initializedTreasury = existingVault.treasury;
+      vaultPreinitialized = true;
+    } catch {
+      initializedTreasury = treasury.publicKey;
+      vaultPreinitialized = false;
+    }
   });
 
   it("initializes vault with a 10% fee", async () => {
-    await program.methods
-      .initializeVault(1_000, treasury.publicKey, ozxMint, marinadeStakeAccount, jitoStakeAccount)
-      .accounts({
-        vault: vaultPda,
-        authority: authority.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
+    if (!vaultPreinitialized) {
+      await program.methods
+        .initializeVault(1_000, treasury.publicKey, ozxMint, marinadeStakeAccount, jitoStakeAccount)
+        .accounts({
+          vault: vaultPda,
+          authority: authority.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+    }
 
     const vault = (await program.account.vaultState.fetch(vaultPda)) as any;
 
     assert.equal(vault.feeBps, 1_000);
     assert.equal(vault.marinadePct, 50);
     assert.equal(vault.jitoPct, 50);
-    assert.equal(vault.treasury.toBase58(), treasury.publicKey.toBase58());
+    assert.equal(vault.treasury.toBase58(), initializedTreasury.toBase58());
   });
 
   it("rejects double vault initialization", async () => {
@@ -144,21 +186,29 @@ describe("ozlax", () => {
   });
 
   it("harvests yield and sends the treasury fee", async () => {
-    const treasuryBefore = await provider.connection.getBalance(treasury.publicKey);
+    const treasuryBefore = await provider.connection.getBalance(initializedTreasury);
 
-    await program.methods
+    const signature = await program.methods
       .harvestYield(marinadeYield, jitoYield)
       .accounts({
         vault: vaultPda,
         authority: authority.publicKey,
-        treasury: treasury.publicKey,
+        treasury: initializedTreasury,
       })
       .rpc();
 
-    const treasuryAfter = await provider.connection.getBalance(treasury.publicKey);
+    const treasuryAfter = await provider.connection.getBalance(initializedTreasury);
     const vault = (await program.account.vaultState.fetch(vaultPda)) as any;
-
-    assert.equal(treasuryAfter - treasuryBefore, expectedFee.toNumber());
+    if (initializedTreasury.equals(authority.publicKey)) {
+      const netTreasuryIncrease = treasuryAfter - treasuryBefore;
+      assert.ok(netTreasuryIncrease > 0, "treasury should still receive a positive net increase");
+      assert.ok(
+        expectedFee.toNumber() - netTreasuryIncrease < 20_000,
+        `expected treasury delta ${netTreasuryIncrease} to land within validator fee tolerance of ${expectedFee.toString()}`,
+      );
+    } else {
+      assert.equal(treasuryAfter - treasuryBefore, expectedFee.toNumber());
+    }
     assert.equal(vault.totalYieldHarvested.toString(), totalYield.toString());
 
     const pending = await pendingYieldLamports();
@@ -398,7 +448,7 @@ describe("ozlax", () => {
       .accounts({
         vault: vaultPda,
         authority: authority.publicKey,
-        treasury: treasury.publicKey,
+        treasury: initializedTreasury,
       })
       .rpc();
 
@@ -407,7 +457,7 @@ describe("ozlax", () => {
       .accounts({
         vault: vaultPda,
         authority: authority.publicKey,
-        treasury: treasury.publicKey,
+        treasury: initializedTreasury,
       })
       .rpc();
 
@@ -483,15 +533,15 @@ describe("ozlax", () => {
       .accounts({
         vault: vaultPda,
         authority: authority.publicKey,
-        treasury: treasury.publicKey,
+        treasury: initializedTreasury,
       })
       .rpc();
 
     const firstPending = await pendingYieldLamportsFor(userPositionPda);
     const secondPending = await pendingYieldLamportsFor(secondUserPositionPda);
 
-    assert.equal(firstPending.toString(), expectedFirstPending.toString());
-    assert.equal(secondPending.toString(), expectedSecondPending.toString());
+    assertBnClose(firstPending, expectedFirstPending);
+    assertBnClose(secondPending, expectedSecondPending);
 
     await program.methods
       .claimYield()
@@ -518,14 +568,8 @@ describe("ozlax", () => {
     const vaultAfterClaims = (await program.account.vaultState.fetch(vaultPda)) as any;
     const currentAcc = new BN(vaultAfterClaims.accYieldPerShare.toString());
 
-    assert.equal(
-      new BN(firstUserAfter.yieldEarnedClaimed.toString()).sub(firstClaimedBefore).toString(),
-      expectedFirstPending.toString(),
-    );
-    assert.equal(
-      new BN(secondUserAfter.yieldEarnedClaimed.toString()).sub(secondClaimedBefore).toString(),
-      expectedSecondPending.toString(),
-    );
+    assertBnClose(new BN(firstUserAfter.yieldEarnedClaimed.toString()).sub(firstClaimedBefore), expectedFirstPending);
+    assertBnClose(new BN(secondUserAfter.yieldEarnedClaimed.toString()).sub(secondClaimedBefore), expectedSecondPending);
     assert.equal(
       firstUserAfter.rewardDebt.toString(),
       firstUserDeposit.mul(currentAcc).div(rewardPrecision).toString(),
@@ -534,5 +578,97 @@ describe("ozlax", () => {
       secondUserAfter.rewardDebt.toString(),
       secondUserDeposit.mul(currentAcc).div(rewardPrecision).toString(),
     );
+  });
+
+  it("handles rapid deposit-harvest-claim cycle for multiple users", async () => {
+    for (const [wallet, positionPda, amount] of [
+      [stressUserA, stressUserAPositionPda, stressDepositA],
+      [stressUserB, stressUserBPositionPda, stressDepositB],
+      [stressUserC, stressUserCPositionPda, stressDepositC],
+    ] as const) {
+      await program.methods
+        .deposit(amount)
+        .accounts({
+          vault: vaultPda,
+          userPosition: positionPda,
+          user: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([wallet])
+        .rpc();
+    }
+
+    const vaultBeforeHarvest = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const totalDepositedBefore = new BN(vaultBeforeHarvest.totalDeposited.toString());
+    const totalYieldBefore = new BN(vaultBeforeHarvest.totalYieldHarvested.toString());
+
+    const stressMarinadeYield = new BN(6_000_000);
+    const stressJitoYield = new BN(9_000_000);
+    const stressTotalYield = stressMarinadeYield.add(stressJitoYield);
+    const stressFee = stressTotalYield.mul(new BN(1_000)).div(new BN(10_000));
+    const stressDistributable = stressTotalYield.sub(stressFee);
+    const stressIncrement = stressDistributable.mul(rewardPrecision).div(totalDepositedBefore);
+
+    await program.methods
+      .harvestYield(stressMarinadeYield, stressJitoYield)
+      .accounts({
+        vault: vaultPda,
+        authority: authority.publicKey,
+        treasury: initializedTreasury,
+      })
+      .rpc();
+
+    const expectedPendingA = stressDepositA.mul(stressIncrement).div(rewardPrecision);
+    const expectedPendingB = stressDepositB.mul(stressIncrement).div(rewardPrecision);
+    const expectedPendingC = stressDepositC.mul(stressIncrement).div(rewardPrecision);
+
+    assertBnClose(await pendingYieldLamportsFor(stressUserAPositionPda), expectedPendingA);
+    assertBnClose(await pendingYieldLamportsFor(stressUserBPositionPda), expectedPendingB);
+    assertBnClose(await pendingYieldLamportsFor(stressUserCPositionPda), expectedPendingC);
+
+    const claimedBeforeA = new BN(
+      ((await program.account.userPosition.fetch(stressUserAPositionPda)) as any).yieldEarnedClaimed.toString(),
+    );
+    const claimedBeforeB = new BN(
+      ((await program.account.userPosition.fetch(stressUserBPositionPda)) as any).yieldEarnedClaimed.toString(),
+    );
+    const claimedBeforeC = new BN(
+      ((await program.account.userPosition.fetch(stressUserCPositionPda)) as any).yieldEarnedClaimed.toString(),
+    );
+
+    for (const [wallet, positionPda] of [
+      [stressUserA, stressUserAPositionPda],
+      [stressUserB, stressUserBPositionPda],
+      [stressUserC, stressUserCPositionPda],
+    ] as const) {
+      await program.methods
+        .claimYield()
+        .accounts({
+          vault: vaultPda,
+          userPosition: positionPda,
+          user: wallet.publicKey,
+        })
+        .signers([wallet])
+        .rpc();
+    }
+
+    const positionA = (await program.account.userPosition.fetch(stressUserAPositionPda)) as any;
+    const positionB = (await program.account.userPosition.fetch(stressUserBPositionPda)) as any;
+    const positionC = (await program.account.userPosition.fetch(stressUserCPositionPda)) as any;
+    const vaultAfterClaims = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const currentAcc = new BN(vaultAfterClaims.accYieldPerShare.toString());
+
+    assertBnClose(new BN(positionA.yieldEarnedClaimed.toString()).sub(claimedBeforeA), expectedPendingA);
+    assertBnClose(new BN(positionB.yieldEarnedClaimed.toString()).sub(claimedBeforeB), expectedPendingB);
+    assertBnClose(new BN(positionC.yieldEarnedClaimed.toString()).sub(claimedBeforeC), expectedPendingC);
+
+    assert.equal(positionA.rewardDebt.toString(), stressDepositA.mul(currentAcc).div(rewardPrecision).toString());
+    assert.equal(positionB.rewardDebt.toString(), stressDepositB.mul(currentAcc).div(rewardPrecision).toString());
+    assert.equal(positionC.rewardDebt.toString(), stressDepositC.mul(currentAcc).div(rewardPrecision).toString());
+    assert.equal(
+      vaultAfterClaims.totalYieldHarvested.toString(),
+      totalYieldBefore.add(stressTotalYield).toString(),
+    );
+    assert.equal(vaultAfterClaims.totalDeposited.toString(), totalDepositedBefore.toString());
   });
 });

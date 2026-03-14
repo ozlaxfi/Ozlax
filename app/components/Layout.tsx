@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { PropsWithChildren, useMemo, useState } from "react";
+import appPackage from "../package.json";
 
 import ConnectWallet from "./ConnectWallet";
 import { SocialIconRow } from "./SocialIcons";
@@ -170,6 +171,7 @@ export default function Layout({
 
           <div className="footer-bottom">
             <span>© 2026 Ozlax. All rights reserved.</span>
+            <span className="footer-version">v{appPackage.version}</span>
             <a href="https://github.com/ozlaxfi/Ozlax" target="_blank" rel="noopener noreferrer">
               Open source on GitHub
             </a>

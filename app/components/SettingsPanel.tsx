@@ -1,36 +1,30 @@
 import { useMemo, useState } from "react";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
+import { PROGRAM_ID } from "../utils/anchor";
+import { explorerAddressUrl, getNetworkLabel, resolveNetwork } from "../utils/network";
 import { SocialIconRow } from "./SocialIcons";
-
-const explorerUrlFor = (address: string, network: "devnet" | "mainnet-beta") =>
-  `https://explorer.solana.com/address/${address}${network === "mainnet-beta" ? "" : "?cluster=devnet"}`;
-
-const resolveNetwork = (): "devnet" | "mainnet-beta" => {
-  if (process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta") {
-    return "mainnet-beta";
-  }
-
-  return (process.env.NEXT_PUBLIC_RPC_URL || "").includes("mainnet") ? "mainnet-beta" : "devnet";
-};
 
 type Props = {
   walletAddress?: string;
 };
 
 export default function SettingsPanel({ walletAddress }: Props) {
+  const { connection } = useConnection();
   const { disconnect, disconnecting } = useWallet();
-  const [copied, setCopied] = useState(false);
-  const network = useMemo(resolveNetwork, []);
+  const [copiedField, setCopiedField] = useState<"address" | "program" | null>(null);
+  const network = useMemo(() => resolveNetwork(connection.rpcEndpoint), [connection.rpcEndpoint]);
+  const networkLabel = getNetworkLabel(network);
 
   if (!walletAddress) {
     return null;
   }
 
-  const copyAddress = async () => {
-    await navigator.clipboard.writeText(walletAddress);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
+  const copyValue = async (value: string, field: "address" | "program") => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    window.setTimeout(() => setCopiedField((current) => (current === field ? null : current)), 1200);
   };
 
   return (
@@ -40,7 +34,7 @@ export default function SettingsPanel({ walletAddress }: Props) {
           <span className="card-eyebrow">Settings</span>
           <h3>Your wallet and network context</h3>
         </div>
-        <span className="card-hint">{network === "mainnet-beta" ? "Mainnet" : "Devnet"}</span>
+        <span className={`network-badge network-badge-${network}`}>{networkLabel}</span>
       </div>
 
       <div className="settings-grid">
@@ -50,16 +44,27 @@ export default function SettingsPanel({ walletAddress }: Props) {
         </div>
         <div className="settings-row">
           <span>Current network</span>
-          <strong>{network === "mainnet-beta" ? "Mainnet" : "Devnet"}</strong>
+          <strong>{networkLabel}</strong>
+        </div>
+        <div className="settings-row">
+          <span>Program ID</span>
+          <strong className="settings-address">{PROGRAM_ID.toBase58()}</strong>
         </div>
       </div>
 
       <div className="settings-actions">
-        <button type="button" className="button-secondary" onClick={() => void copyAddress()}>
-          {copied ? "Address copied" : "Copy address"}
+        <button type="button" className="button-secondary" onClick={() => void copyValue(walletAddress, "address")}>
+          {copiedField === "address" ? "Copied" : "Copy wallet"}
+        </button>
+        <button
+          type="button"
+          className="button-secondary"
+          onClick={() => void copyValue(PROGRAM_ID.toBase58(), "program")}
+        >
+          {copiedField === "program" ? "Copied" : "Copy program ID"}
         </button>
         <a
-          href={explorerUrlFor(walletAddress, network)}
+          href={explorerAddressUrl(walletAddress, connection.rpcEndpoint)}
           target="_blank"
           rel="noopener noreferrer"
           className="button-secondary"

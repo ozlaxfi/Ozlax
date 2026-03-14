@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createContext, PropsWithChildren, useContext, useMemo, useState } from "react";
+import { explorerTxUrl, getRpcEndpoint } from "../utils/network";
 
 type ToastTone = "success" | "error";
 
@@ -20,10 +21,7 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const explorerUrl = (signature: string) => {
-  const cluster = process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta" ? "" : "?cluster=devnet";
-  return `https://explorer.solana.com/tx/${signature}${cluster}`;
-};
+const explorerUrl = (signature: string) => explorerTxUrl(signature, getRpcEndpoint());
 
 function ToastViewport({ toasts, removeToast }: { toasts: ToastItem[]; removeToast: (id: number) => void }) {
   return (

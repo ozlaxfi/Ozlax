@@ -1,4 +1,5 @@
 import axios from "axios";
+import { explorerTxUrl } from "./network";
 
 export type HeliusTransaction = {
   signature: string;
@@ -11,13 +12,6 @@ export type HeliusTransaction = {
 };
 
 const apiKey = process.env.NEXT_PUBLIC_HELIUS_API_KEY || process.env.HELIUS_API_KEY;
-
-const isMainnet =
-  process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta" ||
-  (process.env.NEXT_PUBLIC_RPC_URL || "").includes("mainnet");
-
-const explorerUrlFor = (signature: string) =>
-  `https://explorer.solana.com/tx/${signature}${isMainnet ? "" : "?cluster=devnet"}`;
 
 const humanizeType = (transaction: any) => {
   const rawType = String(transaction?.type || "").toUpperCase();
@@ -68,7 +62,7 @@ const toAmount = (address: string, transaction: any) => {
 
 export const isHeliusConfigured = () => Boolean(apiKey);
 
-export const fetchWalletTransactions = async (address: string): Promise<HeliusTransaction[]> => {
+export const fetchWalletTransactions = async (address: string, rpcEndpoint?: string): Promise<HeliusTransaction[]> => {
   if (!apiKey) {
     return [];
   }
@@ -89,7 +83,7 @@ export const fetchWalletTransactions = async (address: string): Promise<HeliusTr
       amount: toAmount(address, transaction),
       timestamp: transaction.timestamp || 0,
       fee: transaction.fee || 0,
-      explorerUrl: explorerUrlFor(transaction.signature),
+      explorerUrl: explorerTxUrl(transaction.signature, rpcEndpoint),
     }));
   } catch {
     return [];

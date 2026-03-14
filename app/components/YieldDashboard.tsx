@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Skeleton from "./Skeleton";
 import { HeliusTransaction } from "../utils/helius";
 import {
@@ -10,6 +11,7 @@ import {
   shortenAddress,
   shortenSignature,
 } from "../utils/format";
+import { getNetworkLabel, resolveNetwork } from "../utils/network";
 
 type OzlaxState = {
   userPosition: any;
@@ -27,7 +29,22 @@ type Props = {
   transactions: HeliusTransaction[];
   heliusConfigured: boolean;
   activityMessage: string;
+  rpcEndpoint: string;
 };
+
+function ActivityEmptyState({ message }: { message: string }) {
+  return (
+    <div className="table-empty-state">
+      <div className="empty-state-icon">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <rect x="12" y="16" width="40" height="32" rx="8" stroke="currentColor" strokeWidth="3" />
+          <path d="M22 28h20M22 36h12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </div>
+      <p>{message}</p>
+    </div>
+  );
+}
 
 const metric = (label: string, value: string, tone?: "accent" | "positive") => (
   <article className={`glass-card metric-card${tone ? ` metric-card-${tone}` : ""}`} key={label}>
@@ -36,7 +53,16 @@ const metric = (label: string, value: string, tone?: "accent" | "positive") => (
   </article>
 );
 
-export default function YieldDashboard({ ozlax, walletAddress, transactions, heliusConfigured, activityMessage }: Props) {
+export default function YieldDashboard({
+  ozlax,
+  walletAddress,
+  transactions,
+  heliusConfigured,
+  activityMessage,
+  rpcEndpoint,
+}: Props) {
+  const [copiedWallet, setCopiedWallet] = useState(false);
+  const [copiedSignature, setCopiedSignature] = useState<string | null>(null);
   const deposited = Number(ozlax.userPosition?.depositedAmount?.toString?.() || 0) / 1_000_000_000;
   const claimed = Number(ozlax.userPosition?.yieldEarnedClaimed?.toString?.() || 0) / 1_000_000_000;
   const feeBps = ozlax.vaultState?.feeBps ?? 1000;
@@ -44,6 +70,23 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
   const jitoPct = ozlax.vaultState?.jitoPct ?? null;
   const lastHarvestSlot = ozlax.vaultState?.lastHarvestSlot ?? null;
   const showSkeleton = ozlax.isRefreshing && !ozlax.vaultState;
+  const networkLabel = getNetworkLabel(resolveNetwork(rpcEndpoint));
+
+  const copyWallet = async () => {
+    if (!walletAddress) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(walletAddress);
+    setCopiedWallet(true);
+    window.setTimeout(() => setCopiedWallet(false), 1000);
+  };
+
+  const copySignature = async (signature: string) => {
+    await navigator.clipboard.writeText(signature);
+    setCopiedSignature(signature);
+    window.setTimeout(() => setCopiedSignature((current) => (current === signature ? null : current)), 1000);
+  };
 
   const renderMetric = (label: string, value: string, tone?: "accent" | "positive") =>
     showSkeleton ? (
@@ -79,7 +122,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
 
             <div className="status-grid">
               {showSkeleton ? (
-                [...Array(6)].map((_, index) => (
+                [...Array(7)].map((_, index) => (
                   <div key={`status-skeleton-${index}`}>
                     <span>Loading</span>
                     <Skeleton height="1.1rem" width={index % 2 === 0 ? "68%" : "84%"} />
@@ -109,7 +152,22 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                   </div>
                   <div>
                     <span>Connected wallet</span>
-                    <strong>{walletAddress ? shortenAddress(walletAddress) : "Connect wallet"}</strong>
+                    <strong className="copyable-inline">
+                      <span>{walletAddress ? shortenAddress(walletAddress) : "Connect wallet"}</span>
+                      {walletAddress ? (
+                        <button
+                          type="button"
+                          className="copy-chip"
+                          onClick={() => void copyWallet()}
+                        >
+                          {copiedWallet ? "Copied!" : "Copy"}
+                        </button>
+                      ) : null}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Network</span>
+                    <strong>{networkLabel}</strong>
                   </div>
                 </>
               )}
@@ -167,17 +225,26 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                       <td>{transaction.type}</td>
                       <td>{formatSol(transaction.amount, 4)}</td>
                       <td>{formatTimestamp(transaction.timestamp)}</td>
-                      <td>
+                      <td className="signature-cell">
                         <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
                           {shortenSignature(transaction.signature)}
                         </a>
+                        <button
+                          type="button"
+                          className="copy-chip"
+                          onClick={() => void copySignature(transaction.signature)}
+                        >
+                          {copiedSignature === transaction.signature ? "Copied!" : "Copy"}
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan={4} className="table-empty">
-                      {heliusConfigured ? activityMessage || "No recent activity." : "Transaction history requires a Helius API key."}
+                      <ActivityEmptyState
+                        message={heliusConfigured ? activityMessage || "No recent activity." : "Transaction history requires a Helius API key."}
+                      />
                     </td>
                   </tr>
                 )}

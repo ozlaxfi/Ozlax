@@ -180,6 +180,9 @@ export default function HomePage() {
 
           <div className="glass-card hero-visual">
             <div className="protocol-orbit">
+              <span className="protocol-stream protocol-stream-a" aria-hidden="true" />
+              <span className="protocol-stream protocol-stream-b" aria-hidden="true" />
+              <span className="protocol-stream protocol-stream-c" aria-hidden="true" />
               <span className="protocol-flow-badge protocol-flow-badge-left">Deposit SOL</span>
               <a
                 href="https://marinade.finance"
@@ -187,11 +190,13 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className="protocol-node protocol-node-a protocol-partner-link"
               >
-                Marinade
+                <span>Marinade</span>
+                <small>Liquid staking base</small>
               </a>
               <a href="https://www.ozlax.com" target="_blank" rel="noopener noreferrer" className="protocol-core protocol-core-link">
                 <img src="/logo.svg" alt="Ozlax Vault" className="protocol-core-logo" />
                 <span>Ozlax Vault</span>
+                <small>Vault accumulator</small>
               </a>
               <a
                 href="https://www.jito.network"
@@ -199,7 +204,8 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className="protocol-node protocol-node-b protocol-partner-link"
               >
-                Jito
+                <span>Jito</span>
+                <small>MEV-aware lane</small>
               </a>
               <span className="protocol-flow-badge protocol-flow-badge-right">Yield returns to depositors</span>
             </div>
