@@ -2,18 +2,14 @@
 
 Use this flow on a clean Linux, WSL, or macOS machine if Windows local validator privileges or devnet faucet limits are blocking progress.
 
+WSL or Linux bypasses the Windows `solana-test-validator` privilege error, so local validator and Anchor test flows should run normally there.
+
 ## 1. Install tooling
 
-Install:
-
-- Rust via `rustup`
-- Solana CLI `1.18.x`
-- Anchor CLI `0.29.0`
-- Node.js `>=20`
-
-Then install repo dependencies:
+Run:
 
 ```bash
+bash scripts/setup-dev-env.sh
 npm install
 ```
 
@@ -27,17 +23,42 @@ Check balance:
 solana balance <DEPLOY_WALLET> --url devnet
 ```
 
-## 3. Build and deploy
+## 3. Run a local validator and local tests
 
 ```bash
-anchor build
-anchor deploy --provider.cluster devnet
-solana program show <PROGRAM_ID> --url devnet
+solana-test-validator --reset
+anchor test
 ```
 
-Capture the deployed program ID.
+## 4. Deploy to devnet
 
-## 4. Update env and repo config
+Export the env first:
+
+```bash
+export ANCHOR_WALLET=~/.config/solana/id.json
+export NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+export HELIUS_RPC_URL=https://api.devnet.solana.com
+export TREASURY_WALLET=<TREASURY_WALLET>
+export OZX_MINT=<OZX_MINT>
+```
+
+Then run:
+
+```bash
+bash scripts/deploy-devnet.sh
+```
+
+This script will:
+
+1. check wallet balance
+2. verify RPC access
+3. run `anchor deploy --provider.cluster devnet`
+4. print the deployed program ID
+5. run the vault initialization script
+6. print the vault PDA and init transaction
+7. verify the vault account exists
+
+## 5. Update repo config if the devnet program ID changed
 
 Update only:
 
@@ -57,18 +78,6 @@ export HELIUS_RPC_URL=https://api.devnet.solana.com
 export TREASURY_WALLET=<TREASURY_WALLET>
 export OZX_MINT=<OZX_MINT>
 ```
-
-## 5. Initialize the vault
-
-```bash
-npx tsx scripts/initialize-vault.ts
-```
-
-Capture:
-
-- vault PDA
-- initialize tx signature
-- treasury used
 
 ## 6. Verify frontend and keeper readiness
 
