@@ -67,6 +67,34 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions }: P
       </div>
 
       <div className="dashboard-lower-grid">
+        <div className="panel protocol-state-card">
+          <div className="card-head">
+            <div>
+              <span className="card-eyebrow">Protocol state</span>
+              <h3>Vault execution model</h3>
+            </div>
+            <span className="card-hint">{ozlax.isFallback ? "Preview-safe" : "Chain-backed"}</span>
+          </div>
+          <div className="protocol-state-grid">
+            <div className="summary-cell">
+              <span>Harvest cadence</span>
+              <strong>Every 24h</strong>
+            </div>
+            <div className="summary-cell">
+              <span>Treasury take</span>
+              <strong>{(feeBps / 100).toFixed(2)}%</strong>
+            </div>
+            <div className="summary-cell">
+              <span>Settlement</span>
+              <strong>Reward-per-share</strong>
+            </div>
+            <div className="summary-cell">
+              <span>User iteration</span>
+              <strong>None on harvest</strong>
+            </div>
+          </div>
+        </div>
+
         <div className="panel strategy-state-card">
           <div className="card-head">
             <div>
@@ -123,8 +151,12 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions }: P
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={3}>No recent transactions available.</td>
+                <tr className="history-empty-row">
+                  <td colSpan={3}>
+                    {ozlax.isFallback
+                      ? "Preview mode is active. Recent wallet transactions appear here after live interaction data is available."
+                      : "No recent transactions available for this wallet yet."}
+                  </td>
                 </tr>
               )}
             </tbody>

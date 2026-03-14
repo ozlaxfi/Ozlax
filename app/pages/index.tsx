@@ -115,6 +115,12 @@ const accountingPrinciples = [
   "Principal, claimed yield, and vault-level totals stay compact for lower rent and simpler reads.",
 ];
 
+const protocolFacts = [
+  "One Anchor program keeps the deploy surface compact and the account model easy to reason about.",
+  "Treasury fees only accrue on harvested yield, not on principal deposits or withdrawals.",
+  "Devnet-first rollout keeps the protocol safe to iterate while preserving a mainnet-ready architecture.",
+];
+
 export default function HomePage() {
   return (
     <Layout>
@@ -235,6 +241,40 @@ export default function HomePage() {
                 <span>Treasury fee is paid once, distributable yield updates the accumulator once.</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section id="how-ozlax-works" className="section section-grid">
+          <div className="panel docs-card">
+            <span className="card-eyebrow">How Ozlax works</span>
+            <h3>Protocol documentation in product form.</h3>
+            <div className="docs-list">
+              <article className="docs-item">
+                <strong>1. Users deposit SOL into one vault.</strong>
+                <p>The vault receives principal and each user position stores deposited amount, claimed yield, and reward debt.</p>
+              </article>
+              <article className="docs-item">
+                <strong>2. Capital routes across Marinade and Jito.</strong>
+                <p>Vault strategy weights determine how the keeper models the split between both staking lanes.</p>
+              </article>
+              <article className="docs-item">
+                <strong>3. Harvest updates one global accumulator.</strong>
+                <p>Keeper harvests increase `acc_yield_per_share` once, while 10% of harvested yield is routed to treasury.</p>
+              </article>
+              <article className="docs-item">
+                <strong>4. Users realize yield through interaction.</strong>
+                <p>Deposits, withdrawals, and explicit claims settle pending rewards lazily without any user-wide harvest loop.</p>
+              </article>
+            </div>
+          </div>
+          <div className="panel credibility-card">
+            <span className="card-eyebrow">Protocol credibility</span>
+            <h3>Scalable accounting and compact deployment posture.</h3>
+            <ul className="check-list">
+              {protocolFacts.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
