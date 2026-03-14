@@ -106,7 +106,7 @@ export const useOzlax = () => {
         setTvl(null);
         setWeightedApy(null);
         setIsPreview(true);
-        setPreviewReason("Preview Mode — Connect to devnet to interact with the protocol.");
+        setPreviewReason("This RPC endpoint does not expose a live Ozlax vault yet.");
         setStatusNote("Vault state is not available on the current RPC endpoint yet.");
         setUserPosition(null);
         setPendingYield(0);
@@ -152,7 +152,7 @@ export const useOzlax = () => {
       setError(describeError(refreshError));
       setStatusNote("The frontend could not read current vault state from the selected RPC endpoint.");
       setIsPreview(true);
-      setPreviewReason("Preview Mode — Connect to devnet to interact with the protocol.");
+      setPreviewReason("The selected RPC is not returning live Ozlax state right now.");
       setVaultState(null);
       setTvl(null);
       setWeightedApy(null);
@@ -173,7 +173,7 @@ export const useOzlax = () => {
       return "Connect a wallet to interact with the vault.";
     }
     if (isPreview || !vaultState) {
-      return "Preview Mode — Connect to devnet to interact with the protocol.";
+      return "Preview mode is active because the current RPC is not exposing a live Ozlax vault.";
     }
 
     return null;

@@ -7,39 +7,41 @@ export default function PolicyPage() {
         <div className="glass-card legal-hero">
           <span className="section-kicker">Cookie Policy</span>
           <h1>Cookie Policy</h1>
-          <p>Last updated: March 2025</p>
+          <p>Last updated: March 2026</p>
         </div>
 
         <div className="legal-stack">
           <section className="glass-card legal-section">
-            <h2>1. Purpose</h2>
+            <h2>1. What this policy covers</h2>
             <p>
-              This Cookie Policy explains how Ozlax uses browser cookies or similar storage mechanisms when you access the protocol
-              interface.
+              This Cookie Policy explains how Ozlax uses cookies or similar browser storage when you access the website and dashboard.
+              The goal is not to track you around the internet. The goal is simply to let the interface behave like a functional web
+              application.
             </p>
           </section>
 
           <section className="glass-card legal-section">
-            <h2>2. Essential Cookies Only</h2>
+            <h2>2. Essential cookies only</h2>
             <p>
-              Ozlax uses only essential browser storage needed to support normal interface behavior such as wallet connection state,
-              provider preferences, and basic UI continuity. These items help the application function correctly.
+              Ozlax uses only the limited browser storage needed for things like wallet connection continuity, provider selection, and
+              basic interface preferences. Those settings help the site reopen in a usable state rather than forcing you to reconnect
+              every time you refresh.
             </p>
           </section>
 
           <section className="glass-card legal-section">
-            <h2>3. No Tracking or Advertising Cookies</h2>
+            <h2>3. No tracking or advertising cookies</h2>
             <p>
-              The current Ozlax frontend does not intentionally use tracking cookies, advertising cookies, retargeting technologies,
-              or behavioral profiling scripts.
+              The current Ozlax frontend does not intentionally use advertising cookies, retargeting technology, or tracking cookies
+              designed to follow you across other websites.
             </p>
           </section>
 
           <section className="glass-card legal-section">
-            <h2>4. Managing Cookies</h2>
+            <h2>4. How to disable cookies</h2>
             <p>
-              You can disable or remove cookies through your browser settings. Doing so may affect wallet connection persistence or
-              other interface preferences, but it should not affect public blockchain data that is already visible on-chain.
+              You can disable or clear cookies and local storage through your browser settings. Doing so may reset wallet connection
+              persistence or interface preferences, but it does not remove public blockchain data that has already been written on chain.
             </p>
           </section>
 

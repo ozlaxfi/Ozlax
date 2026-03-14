@@ -278,6 +278,12 @@ img {
 .strategy-card p,
 .detail-list li,
 .supporting-copy,
+.narrative-card p,
+.pipeline-item-card p,
+.loop-step p,
+.credibility-card p,
+.credibility-panel p,
+.community-link-card p,
 .legal-section p,
 .legal-hero p,
 .dashboard-hero p,
@@ -513,8 +519,13 @@ img {
 .protocol-summary div,
 .flow-step,
 .strategy-card,
+.narrative-card,
+.pipeline-item-card,
 .token-card,
 .trust-card,
+.credibility-card,
+.credibility-panel,
+.protocol-state-card,
 .connect-gate,
 .metric-card,
 .action-card,
@@ -556,13 +567,21 @@ img {
 
 .flow-grid,
 .strategy-grid,
-.feature-grid {
+.feature-grid,
+.narrative-shell,
+.keeper-shell,
+.credibility-grid,
+.loop-grid {
   display: grid;
   gap: 1rem;
 }
 
 .flow-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.flow-grid-rich .flow-step {
+  min-height: 100%;
 }
 
 .flow-step {
@@ -594,6 +613,10 @@ img {
 
 .strategy-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .strategy-card {
@@ -645,6 +668,88 @@ img {
   gap: 1rem;
 }
 
+.narrative-shell,
+.keeper-shell {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+.narrative-card,
+.credibility-card {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+}
+
+.narrative-card h3,
+.pipeline-item-card h3,
+.loop-step h3,
+.credibility-card h3,
+.credibility-panel h3,
+.protocol-state-card h3 {
+  margin: 0.45rem 0 0;
+  font-size: 1.15rem;
+}
+
+.pipeline-card {
+  position: relative;
+  display: grid;
+  gap: 0.9rem;
+  overflow: hidden;
+}
+
+.pipeline-line {
+  position: absolute;
+  top: 1.8rem;
+  bottom: 1.8rem;
+  left: 1.9rem;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(153, 69, 255, 0.9), rgba(20, 241, 149, 0.35));
+}
+
+.pipeline-item-card {
+  position: relative;
+  margin-left: 1.2rem;
+  padding: 1.15rem 1.15rem 1.15rem 1.45rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pipeline-item-card::before {
+  content: "";
+  position: absolute;
+  top: 1.5rem;
+  left: -0.42rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--solana-purple), var(--solana-green));
+  box-shadow: 0 0 0 6px rgba(153, 69, 255, 0.1);
+}
+
+.loop-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.9rem;
+}
+
+.loop-step,
+.credibility-panel,
+.protocol-state-card {
+  padding: 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.loop-step h3,
+.credibility-panel h3 {
+  margin: 0 0 0.65rem;
+}
+
+.credibility-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .detail-list {
   margin: 0;
   padding-left: 1.15rem;
@@ -683,6 +788,15 @@ img {
 
 .community-link-card span {
   font-weight: 700;
+}
+
+.community-link-card strong {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.community-link-card p {
+  margin: 0;
 }
 
 .community-link-card:hover {
@@ -743,6 +857,11 @@ img {
 }
 
 .dashboard-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-side-stack {
   display: grid;
   gap: 1rem;
 }
@@ -1036,10 +1155,16 @@ img {
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .credibility-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1024px) {
   .home-hero,
+  .narrative-shell,
+  .keeper-shell,
   .token-trust-grid,
   .dashboard-detail-grid,
   .footer-top {
@@ -1058,7 +1183,9 @@ img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .strategy-grid {
+  .strategy-grid,
+  .loop-grid,
+  .credibility-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1099,7 +1226,9 @@ img {
   .protocol-summary,
   .feature-grid,
   .footer-columns,
-  .community-icon-grid {
+  .community-icon-grid,
+  .overview-grid,
+  .credibility-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1119,6 +1248,19 @@ img {
 
   .activity-table {
     min-width: 34rem;
+  }
+
+  .pipeline-line {
+    display: none;
+  }
+
+  .pipeline-item-card {
+    margin-left: 0;
+    padding-left: 1.15rem;
+  }
+
+  .pipeline-item-card::before {
+    left: 1rem;
   }
 }
 

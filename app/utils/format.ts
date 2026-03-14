@@ -10,7 +10,7 @@ export const formatCompactNumber = (value: number, maximumFractionDigits = 1) =>
 
 export const formatSol = (value?: number | null, fractionDigits = 4) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
+    return "Unavailable";
   }
 
   return `${value.toFixed(fractionDigits)} SOL`;
@@ -18,7 +18,7 @@ export const formatSol = (value?: number | null, fractionDigits = 4) => {
 
 export const formatCompactSol = (value?: number | null, fractionDigits = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
+    return "Unavailable";
   }
 
   return `${formatCompactNumber(value, fractionDigits)} SOL`;
@@ -26,7 +26,7 @@ export const formatCompactSol = (value?: number | null, fractionDigits = 2) => {
 
 export const formatPercent = (value?: number | null, fractionDigits = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
+    return "Unavailable";
   }
 
   return `${(value * 100).toFixed(fractionDigits)}%`;
@@ -34,7 +34,7 @@ export const formatPercent = (value?: number | null, fractionDigits = 2) => {
 
 export const formatWholePercent = (value?: number | null) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
+    return "Unavailable";
   }
 
   return `${value}%`;
@@ -66,7 +66,7 @@ export const shortenAddress = (value?: string | null) => {
 
 export const shortenSignature = (value?: string | null) => {
   if (!value) {
-    return "—";
+    return "Pending";
   }
 
   return `${value.slice(0, 6)}...${value.slice(-6)}`;

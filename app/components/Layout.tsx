@@ -62,7 +62,7 @@ function Icon({ children }: PropsWithChildren) {
 
 export default function Layout({
   children,
-  title = "Ozlax — Micro-Staking Yield Aggregator on Solana",
+  title = "Ozlax | Micro-Staking Yield Aggregator on Solana",
   description = "Deposit SOL into the Ozlax vault and earn optimized micro-staking yield across Marinade and Jito with transparent protocol fees.",
 }: LayoutProps) {
   const router = useRouter();
@@ -193,7 +193,7 @@ export default function Layout({
           </div>
 
           <div className="footer-bottom">
-            <span>© 2025 Ozlax. All rights reserved.</span>
+            <span>© 2026 Ozlax. All rights reserved.</span>
             <a href="https://github.com/ozlaxfi/Ozlax" target="_blank" rel="noreferrer">
               Open source on GitHub
             </a>

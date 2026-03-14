@@ -35,7 +35,7 @@ export default function TVLCounter({ value }: Props) {
   }, [value]);
 
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return <strong className="tvl-value tvl-placeholder">—</strong>;
+    return <strong className="tvl-value tvl-placeholder">TVL pending</strong>;
   }
 
   return <strong className="tvl-value">{formatCompactNumber(display, 2)} SOL</strong>;

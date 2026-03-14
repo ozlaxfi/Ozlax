@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
   return (
     <Layout
-      title="Ozlax Dashboard — Micro-Staking Yield Aggregator on Solana"
+      title="Ozlax Dashboard | Micro-Staking Yield Aggregator on Solana"
       description="Monitor your Ozlax vault position, view protocol metrics, and manage deposits, withdrawals, and yield claims."
     >
       <section className="page-section dashboard-page">
@@ -53,7 +53,7 @@ export default function DashboardPage() {
             <h1>Protocol controls for depositors, operators, and devnet users.</h1>
             <p>
               Track your deposited SOL, pending rewards, protocol TVL, live allocation split, and recent wallet activity from a
-              single DeFi interface.
+              single protocol surface that still makes the accounting legible.
             </p>
           </div>
           <div className="dashboard-hero-badges">
@@ -68,8 +68,8 @@ export default function DashboardPage() {
             <strong>Preview Mode</strong>
             <span>
               {wallet.connected
-                ? ozlax.previewReason || "Connect to devnet to interact with the protocol."
-                : "Preview Mode — Connect to devnet to interact with the protocol."}
+                ? ozlax.previewReason || "You are connected, but this RPC is not exposing a live Ozlax vault yet."
+                : "Connect a devnet wallet to move from preview into the live vault interface."}
             </span>
           </div>
         )}
@@ -79,8 +79,8 @@ export default function DashboardPage() {
             <span className="card-eyebrow">Wallet connection</span>
             <h2>Connect a Solana wallet to load your live Ozlax position.</h2>
             <p>
-              The dashboard stays visible in preview mode so you can inspect the protocol layout, but deposits, withdrawals, and
-              claims remain disabled until a wallet is connected to devnet.
+              The dashboard stays visible so you can inspect the vault layout, but deposits, withdrawals, and claims stay disabled
+              until a wallet is connected to a live network the protocol can read.
             </p>
             <ConnectWallet className="wallet-button-large" />
           </div>

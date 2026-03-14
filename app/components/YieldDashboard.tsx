@@ -53,49 +53,70 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
       </div>
 
       <div className="dashboard-detail-grid">
-        <section className="glass-card vault-status-card">
-          <div className="section-title-row">
-            <div>
-              <span className="card-eyebrow">Vault status</span>
-              <h3>Live protocol state</h3>
+        <div className="dashboard-side-stack">
+          <section className="glass-card vault-status-card">
+            <div className="section-title-row">
+              <div>
+                <span className="card-eyebrow">Vault status</span>
+                <h3>Live protocol state</h3>
+              </div>
+              <span className={`status-chip${ozlax.isPreview ? " status-chip-muted" : ""}`}>
+                {ozlax.isPreview ? "Preview" : ozlax.isRefreshing ? "Refreshing" : "Live"}
+              </span>
             </div>
-            <span className={`status-chip${ozlax.isPreview ? " status-chip-muted" : ""}`}>
-              {ozlax.isPreview ? "Preview" : ozlax.isRefreshing ? "Refreshing" : "Live"}
-            </span>
-          </div>
 
-          <div className="status-grid">
-            <div>
-              <span>Weighted APY</span>
-              <strong>{formatPercent(ozlax.weightedApy)}</strong>
+            <div className="status-grid">
+              <div>
+                <span>Weighted APY</span>
+                <strong>{formatPercent(ozlax.weightedApy)}</strong>
+              </div>
+              <div>
+                <span>Fee rate</span>
+                <strong>{formatWholePercent(feeBps / 100)}</strong>
+              </div>
+              <div>
+                <span>Marinade allocation</span>
+                <strong>{formatWholePercent(marinadePct)}</strong>
+              </div>
+              <div>
+                <span>Jito allocation</span>
+                <strong>{formatWholePercent(jitoPct)}</strong>
+              </div>
+              <div>
+                <span>Last harvest slot</span>
+                <strong>{formatSlot(lastHarvestSlot)}</strong>
+              </div>
+              <div>
+                <span>Connected wallet</span>
+                <strong>{walletAddress ? shortenAddress(walletAddress) : "Preview only"}</strong>
+              </div>
             </div>
-            <div>
-              <span>Fee rate</span>
-              <strong>{formatWholePercent(feeBps / 100)}</strong>
-            </div>
-            <div>
-              <span>Marinade allocation</span>
-              <strong>{formatWholePercent(marinadePct)}</strong>
-            </div>
-            <div>
-              <span>Jito allocation</span>
-              <strong>{formatWholePercent(jitoPct)}</strong>
-            </div>
-            <div>
-              <span>Last harvest slot</span>
-              <strong>{formatSlot(lastHarvestSlot)}</strong>
-            </div>
-            <div>
-              <span>Connected wallet</span>
-              <strong>{walletAddress ? shortenAddress(walletAddress) : "Preview only"}</strong>
-            </div>
-          </div>
 
-          <p className="supporting-copy">
-            Harvest cadence is executed by the keeper. The current on-chain account model does not store a dedicated harvest timestamp,
-            so the UI treats that field conservatively unless a live slot becomes available.
-          </p>
-        </section>
+            <p className="supporting-copy">
+              Harvest cadence is keeper driven. The current account model does not store a separate timestamp, so the interface shows
+              the last confirmed slot when that state is available.
+            </p>
+          </section>
+
+          <section className="glass-card protocol-state-card">
+            <div className="section-title-row">
+              <div>
+                <span className="card-eyebrow">Protocol state</span>
+                <h3>How the vault settles value</h3>
+              </div>
+              <span className="card-hint">24h cadence</span>
+            </div>
+
+            <p className="supporting-copy">
+              Ozlax is designed around one daily keeper rhythm, a fixed 10% treasury fee on harvested yield, and reward-per-share
+              settlement that updates globally before users realize rewards through their own interactions.
+            </p>
+            <p className="supporting-copy">
+              That design keeps harvests constant-time, avoids looping across depositors, and makes the protocol easier to inspect than
+              a system that hides state changes behind multiple moving parts.
+            </p>
+          </section>
+        </div>
 
         <section className="glass-card activity-card">
           <div className="section-title-row">
@@ -135,7 +156,7 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
                     <td colSpan={4} className="table-empty">
                       {heliusConfigured
                         ? activityMessage || "No recent transactions were returned for this wallet yet."
-                        : "Set NEXT_PUBLIC_HELIUS_API_KEY to load recent wallet activity from Helius."}
+                        : "Set NEXT_PUBLIC_HELIUS_API_KEY if you want this dashboard to show recent Helius activity."}
                     </td>
                   </tr>
                 )}

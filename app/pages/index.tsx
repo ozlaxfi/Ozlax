@@ -5,62 +5,128 @@ import FeatureCard from "../components/FeatureCard";
 import Layout from "../components/Layout";
 import TVLCounter from "../components/TVLCounter";
 import { useOzlax } from "../hooks/useOzlax";
+import { formatPercent, formatWholePercent } from "../utils/format";
 
-const flowSteps = [
+const overviewCards = [
   {
-    step: "01",
-    title: "Deposit SOL into the Ozlax vault",
-    body: "Users interact with one Solana vault entry point instead of managing separate staking routes themselves.",
+    eyebrow: "Deposit flow",
+    title: "One vault, one user surface",
+    description:
+      "Users deposit SOL once and the vault keeps the accounting compact. Principal, reward debt, and claimed yield stay easy to reason about on chain.",
   },
   {
-    step: "02",
-    title: "Allocate capital across Marinade and Jito",
-    body: "Vault allocation targets split exposure between mSOL and jitoSOL strategy lanes.",
+    eyebrow: "Allocation",
+    title: "Marinade and Jito in one strategy",
+    description:
+      "Ozlax keeps exposure across two liquid staking lanes instead of making depositors manage multiple positions by hand.",
   },
   {
-    step: "03",
-    title: "Keeper harvests yield every 24 hours",
-    body: "Yield is harvested on a fixed keeper cadence and settled through one accumulator update.",
+    eyebrow: "Harvest",
+    title: "Yield distribution without user iteration",
+    description:
+      "The keeper updates one global accumulator on harvest so settlement remains predictable even as the depositor set grows.",
   },
   {
-    step: "04",
-    title: "Treasury takes 10%, depositors receive 90%",
-    body: "Protocol fees apply only to harvested yield, not to principal deposits or withdrawals.",
-  },
-  {
-    step: "05",
-    title: "Users claim yield or withdraw principal anytime",
-    body: "Claims and withdrawals settle each user position lazily without looping across all depositors.",
+    eyebrow: "Treasury",
+    title: "Fees only when yield is real",
+    description:
+      "The treasury takes its share from harvested yield rather than from principal, which keeps the fee model aligned with protocol performance.",
   },
 ];
 
-const architectureCards = [
+const flowSteps = [
   {
-    eyebrow: "Accounting",
-    title: "O(1) harvest settlement",
-    description: "A single global accumulator updates on harvest, so the keeper never iterates through all user accounts.",
+    index: "01",
+    title: "Deposit SOL into the Ozlax vault",
+    copy:
+      "User capital enters a single vault PDA. From that point on, Ozlax tracks principal and yield with one compact user position per wallet.",
   },
   {
-    eyebrow: "Surface area",
-    title: "One compact Anchor program",
-    description: "The protocol keeps its on-chain footprint small: one vault state, one user position PDA, one program surface.",
+    index: "02",
+    title: "Allocate across Marinade and Jito",
+    copy:
+      "The vault keeps an allocation split across Marinade and Jito so the protocol can balance baseline liquid staking with a second yield lane.",
   },
   {
-    eyebrow: "Deployment",
-    title: "Devnet-first, mainnet-ready",
-    description: "The protocol is staged for devnet verification today with a clean path to mainnet configuration later.",
+    index: "03",
+    title: "Harvest on a keeper rhythm",
+    copy:
+      "The keeper settles yield on cadence, routes the treasury fee, and updates the global reward accumulator in a single protocol action.",
   },
   {
-    eyebrow: "Revenue",
-    title: "Transparent treasury fee",
-    description: "Ozlax applies a fixed 10% fee to harvested yield while preserving principal and claim visibility for depositors.",
+    index: "04",
+    title: "Distribute rewards through the accumulator",
+    copy:
+      "Every depositor shares in the harvest through reward-per-share accounting, which avoids looping across all users on chain.",
   },
+  {
+    index: "05",
+    title: "Claim yield or withdraw principal anytime",
+    copy:
+      "Users settle what they are owed when they interact. Claims, deposits, and withdrawals all read the same accounting model.",
+  },
+];
+
+const strategyCards = [
+  {
+    title: "Marinade Finance",
+    allocation: 60,
+    description:
+      "Marinade gives Ozlax a liquid staking base layer that feels familiar to Solana users and keeps the vault anchored to a well-known route for SOL yield.",
+  },
+  {
+    title: "Jito",
+    allocation: 40,
+    description:
+      "Jito adds a second lane with MEV-aware staking flow, which helps the vault avoid looking at Solana yield through a single provider.",
+  },
+];
+
+const keeperLoop = [
+  {
+    title: "The keeper reads the vault every day",
+    detail:
+      "The cycle starts by checking vault TVL, allocation percentages, and the state needed to settle the next harvest cleanly.",
+  },
+  {
+    title: "Yield is estimated against the current split",
+    detail:
+      "Marinade and Jito inputs roll into one weighted harvest result so the protocol updates from the strategy mix it is actually running.",
+  },
+  {
+    title: "Treasury takes its share when harvest settles",
+    detail:
+      "Ten percent of harvested yield is routed to treasury at settlement time, which keeps protocol revenue tied to realized performance.",
+  },
+  {
+    title: "The remaining yield becomes claimable",
+    detail:
+      "Ninety percent of the harvest increases the accumulator so depositors can realize rewards the next time they interact with the vault.",
+  },
+];
+
+const protocolFacts = [
+  "Ozlax runs as one compact Anchor program, which keeps the deployment surface and account graph straightforward.",
+  "The reward-per-share model settles in O(1) time per harvest, so scale does not come from iterating across every depositor.",
+  "The treasury model is simple on purpose. A fixed 10% fee applies to harvested yield and leaves principal untouched.",
+];
+
+const tokenFacts = [
+  "The $OZX token has a fixed supply of one billion units with nine decimals.",
+  "The mint authority has been permanently revoked, so the current supply cannot be expanded by a hidden admin path.",
+  "Governance utility is planned for a later phase once the protocol has completed its devnet-first rollout and more operational history exists.",
+];
+
+const credibilityParagraphs = [
+  "Ozlax is intentionally narrow in scope. One program, one vault, one accumulator, and a fee model that is easy to inspect beat a sprawling account model that is hard to trust.",
+  "The protocol is being run devnet-first because that is the right tradeoff for a system that is still earning its production history. The architecture is already shaped for mainnet, but the rollout stays disciplined.",
 ];
 
 const communityLinks = [
   {
     href: process.env.NEXT_PUBLIC_DISCORD || "https://discord.gg/hZ4BE84qc3",
     label: "Discord",
+    description: "Join the builder channel and track live protocol progress as new vault milestones land.",
     icon: (
       <path d="M20.3 5.5A16.7 16.7 0 0 0 16.2 4a11.6 11.6 0 0 0-.5 1l-.2.5a15.4 15.4 0 0 0-7 0l-.2-.5c-.2-.4-.3-.7-.5-1A16.7 16.7 0 0 0 3.7 5.5 18.4 18.4 0 0 0 1 17.8a16.9 16.9 0 0 0 5 2.5l1.1-1.8a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.4 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.8a16.9 16.9 0 0 0 5-2.5 18.4 18.4 0 0 0-2.7-12.3ZM8.2 15.4c-.9 0-1.6-.8-1.6-1.8S7.3 12 8.2 12s1.7.8 1.6 1.7c0 1-.7 1.8-1.6 1.8Zm7.6 0c-.9 0-1.6-.8-1.6-1.8S14.9 12 15.8 12s1.7.8 1.6 1.7c0 1-.7 1.8-1.6 1.8Z" />
     ),
@@ -68,11 +134,13 @@ const communityLinks = [
   {
     href: process.env.NEXT_PUBLIC_TWITTER || "https://x.com/OzlaxHQ",
     label: "X",
+    description: "Follow the public build log, deployment milestones, and protocol updates in real time.",
     icon: <path d="M18.9 2H22l-6.8 7.8L23 22h-6.1l-4.8-6.3L6.6 22H3.5l7.3-8.4L1 2h6.3l4.3 5.7L18.9 2Zm-1.1 18h1.7L6.4 3.8H4.6L17.8 20Z" />,
   },
   {
     href: process.env.NEXT_PUBLIC_TELEGRAM || "https://t.me/ozlaxfi",
     label: "Telegram",
+    description: "Keep up with the community conversation and the next release window from your phone.",
     icon: <path d="m21.9 4.4-3.2 15.1c-.2 1.1-.9 1.4-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.6.6-1.1.6l.4-5.1 9.4-8.5c.4-.3-.1-.5-.6-.1L6.1 13.1l-4.8-1.5c-1-.3-1-.9.2-1.4l18.7-7.2c.9-.3 1.7.2 1.4 1.4Z" />,
   },
 ];
@@ -87,22 +155,26 @@ function Icon({ children }: { children: ReactNode }) {
 
 export default function HomePage() {
   const ozlax = useOzlax();
+  const marinadeAllocation = ozlax.vaultState?.marinadePct ?? strategyCards[0].allocation;
+  const jitoAllocation = ozlax.vaultState?.jitoPct ?? strategyCards[1].allocation;
 
   return (
     <Layout>
       <section className="page-section home-page">
-        <div className="home-hero">
-          <div className="hero-content glass-card">
+        <section className="home-hero">
+          <div className="glass-card hero-content">
             <div className="hero-mark">
               <img src="/logo.svg" alt="Ozlax" className="hero-logo" />
-              <span className="section-kicker">Solana-native protocol</span>
+              <span className="section-kicker">Micro-staking yield aggregator</span>
             </div>
 
-            <h1>Micro-Staking Yield Aggregator on Solana</h1>
-            <p className="hero-subheadline">
-              Deposit SOL, earn optimized yield across Marinade and Jito automatically, and settle rewards through a compact,
-              transparent Solana vault architecture.
-            </p>
+            <div>
+              <h1>Micro-Staking Yield Aggregator on Solana</h1>
+              <p className="hero-subheadline">
+                Deposit SOL once and let Ozlax route the vault across Marinade and Jito, harvest the yield on cadence, and keep
+                distribution transparent from treasury fee to final user claim.
+              </p>
+            </div>
 
             <div className="hero-actions">
               <Link href="/dashboard" className="button-primary">
@@ -117,74 +189,126 @@ export default function HomePage() {
               <article className="glass-card hero-metric">
                 <span>Protocol TVL</span>
                 <TVLCounter value={ozlax.tvl} />
-                <p>{ozlax.isPreview ? "Vault not initialized on the current RPC yet." : "Live vault state loaded from chain."}</p>
+                <p>{ozlax.isPreview ? "Vault TVL will appear here as soon as the selected RPC exposes live state." : "Live vault TVL pulled from the current RPC."}</p>
               </article>
               <article className="glass-card hero-metric">
-                <span>Fee model</span>
-                <strong>10% of harvested yield</strong>
-                <p>Principal deposits and withdrawals are never charged a protocol fee.</p>
+                <span>Weighted APY</span>
+                <strong>{formatPercent(ozlax.weightedApy)}</strong>
+                <p>The front end estimates weighted yield from the current on-chain split across Marinade and Jito.</p>
               </article>
               <article className="glass-card hero-metric">
-                <span>Execution</span>
-                <strong>Keeper-harvested every 24h</strong>
-                <p>Accumulator-based distribution keeps harvests scalable even as depositor count grows.</p>
+                <span>Treasury fee</span>
+                <strong>10%</strong>
+                <p>The protocol fee only applies when yield is harvested. Principal deposits and withdrawals stay untouched.</p>
               </article>
             </div>
           </div>
 
-          <div className="hero-visual glass-card">
-            <span className="card-eyebrow">Protocol signal</span>
-            <h2>One vault. Two yield lanes. One deterministic accounting model.</h2>
-            <div className="protocol-visual">
-              <div className="protocol-orbit">
-                <span className="protocol-core">Ozlax Vault</span>
-                <span className="protocol-node protocol-node-a">Marinade</span>
-                <span className="protocol-node protocol-node-b">Jito</span>
+          <div className="glass-card hero-visual">
+            <div className="protocol-orbit">
+              <span className="protocol-node protocol-node-a">Marinade</span>
+              <span className="protocol-core">Ozlax Vault</span>
+              <span className="protocol-node protocol-node-b">Jito</span>
+            </div>
+
+            <div className="protocol-summary">
+              <div>
+                <span>Current split</span>
+                <strong>{`${formatWholePercent(marinadeAllocation)} / ${formatWholePercent(jitoAllocation)}`}</strong>
               </div>
-              <div className="protocol-summary">
-                <div>
-                  <span>Current weighted APY</span>
-                  <strong>{ozlax.weightedApy ? `${(ozlax.weightedApy * 100).toFixed(2)}%` : "—"}</strong>
-                </div>
-                <div>
-                  <span>Current TVL</span>
-                  <strong>{ozlax.tvl !== null ? `${ozlax.tvl.toFixed(2)} SOL` : "—"}</strong>
-                </div>
-                <div>
-                  <span>Status</span>
-                  <strong>{ozlax.isPreview ? "Preview mode" : "Live vault state"}</strong>
-                </div>
+              <div>
+                <span>Settlement model</span>
+                <strong>O(1) per harvest</strong>
+              </div>
+              <div>
+                <span>Program footprint</span>
+                <strong>One Anchor program</strong>
               </div>
             </div>
-          </div>
-        </div>
-
-        <section className="section-shell" id="how-it-works">
-          <div className="section-head">
-            <span className="section-kicker">How Ozlax Works</span>
-            <h2>Visual protocol flow from deposit to claim.</h2>
-            <p>
-              Ozlax keeps the user journey simple while the vault, keeper, and reward accounting system handle the operational
-              complexity in the background.
-            </p>
-          </div>
-
-          <div className="flow-grid">
-            {flowSteps.map((item) => (
-              <article key={item.step} className="glass-card flow-step">
-                <span className="flow-index">{item.step}</span>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
-            ))}
           </div>
         </section>
 
         <section className="section-shell">
           <div className="section-head">
-            <span className="section-kicker">Strategy allocation</span>
-            <h2>Two staking lanes, one vault entry point.</h2>
-            <p>Ozlax uses Marinade and Jito as complementary liquid staking routes for SOL yield aggregation.</p>
+            <span className="section-kicker">Protocol overview</span>
+            <h2>Ozlax keeps the product surface simple while the vault does the harder work underneath.</h2>
+            <p>
+              Users should not need to think in terms of account graphs, reward debt, or strategy routing every time they deposit.
+              The protocol handles that machinery so the interface can stay clear without hiding how the system actually works.
+            </p>
+          </div>
+
+          <div className="feature-grid overview-grid">
+            {overviewCards.map((card) => (
+              <FeatureCard key={card.title} {...card} />
+            ))}
+          </div>
+        </section>
+
+        <section id="how-it-works" className="section-shell protocol-flow-shell">
+          <div className="section-head">
+            <span className="section-kicker">How Ozlax works</span>
+            <h2>What happens to your SOL after it reaches the vault.</h2>
+            <p>
+              The protocol flow is short on purpose. Deposit once, let the vault allocate across staking routes, let the keeper
+              settle harvests, and realize your rewards the next time you interact.
+            </p>
+          </div>
+
+          <div className="flow-grid flow-grid-rich">
+            {flowSteps.map((step) => (
+              <article key={step.index} className="glass-card flow-step">
+                <span className="flow-index">{step.index}</span>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="section-shell narrative-shell">
+          <div className="glass-card narrative-card">
+            <span className="card-eyebrow">Vault flow</span>
+            <h3>The user path stays direct even though the accounting is doing real protocol work.</h3>
+            <p>
+              Each depositor sees a straightforward experience, but the vault is still maintaining principal, reward debt, claimed
+              yield, total harvested yield, and the strategy split that drives the keeper’s daily cycle.
+            </p>
+            <p>
+              That combination is what makes Ozlax feel like a real DeFi primitive instead of a wrapper around a single staking
+              endpoint. The protocol is simple at the surface because the design underneath is compact, not because the mechanics were
+              hidden.
+            </p>
+          </div>
+
+          <div className="glass-card pipeline-card">
+            <div className="pipeline-line" aria-hidden="true" />
+            <article className="pipeline-item-card">
+              <span className="card-eyebrow">Vault state</span>
+              <h3>Global state keeps the system coherent.</h3>
+              <p>The vault stores TVL, fee rate, allocation percentages, and the accumulator that turns harvests into claimable yield.</p>
+            </article>
+            <article className="pipeline-item-card">
+              <span className="card-eyebrow">User position</span>
+              <h3>Every wallet carries only the state it needs.</h3>
+              <p>Deposited principal, reward debt, and claimed rewards stay compact so reads and settlements remain predictable.</p>
+            </article>
+            <article className="pipeline-item-card">
+              <span className="card-eyebrow">Keeper harvest</span>
+              <h3>One update moves the whole vault forward.</h3>
+              <p>The keeper settles the treasury share and lifts the accumulator once, which is the core reason the protocol can scale cleanly.</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="section-shell">
+          <div className="section-head">
+            <span className="section-kicker">Strategy cards</span>
+            <h2>Two staking routes, one vault strategy.</h2>
+            <p>
+              Ozlax is not trying to pretend every yield source looks the same. Marinade and Jito are in the vault for different
+              reasons, and that distinction matters when you explain why the strategy exists.
+            </p>
           </div>
 
           <div className="strategy-grid">
@@ -192,85 +316,159 @@ export default function HomePage() {
               <div className="strategy-head">
                 <div>
                   <span className="card-eyebrow">Marinade Finance</span>
-                  <h3>{ozlax.vaultState?.marinadePct ?? "—"}% allocation</h3>
+                  <h3>Liquid staking base exposure</h3>
                 </div>
-                <span className="strategy-pill">mSOL liquidity</span>
+                <span className="strategy-pill">{formatWholePercent(marinadeAllocation)}</span>
               </div>
-              <p>
-                Marinade provides a deep and familiar liquid staking route, giving Ozlax a strong base layer for capital allocation
-                and user-friendly SOL exposure.
-              </p>
+              <p>{strategyCards[0].description}</p>
             </article>
 
             <article className="glass-card strategy-card">
               <div className="strategy-head">
                 <div>
                   <span className="card-eyebrow">Jito</span>
-                  <h3>{ozlax.vaultState?.jitoPct ?? "—"}% allocation</h3>
+                  <h3>MEV-aware staking lane</h3>
                 </div>
-                <span className="strategy-pill">MEV-aware yield</span>
+                <span className="strategy-pill">{formatWholePercent(jitoAllocation)}</span>
               </div>
-              <p>
-                Jito adds a second staking lane with MEV-aware yield characteristics, helping the vault avoid dependence on a single
-                liquid staking path.
-              </p>
+              <p>{strategyCards[1].description}</p>
             </article>
+          </div>
+        </section>
+
+        <section id="keeper-loop" className="section-shell keeper-shell">
+          <div className="glass-card keeper-loop-card">
+            <span className="section-kicker">Keeper loop explainer</span>
+            <h2>The harvest cycle runs on a steady 24 hour rhythm.</h2>
+            <p>
+              The keeper is not there to create mystery. It reads the vault, models the harvest against the current allocation, routes
+              treasury fees, and leaves the rest behind as user yield. That rhythm is the operational heartbeat of the protocol.
+            </p>
+
+            <div className="loop-grid">
+              {keeperLoop.map((item) => (
+                <article key={item.title} className="loop-step">
+                  <h3>{item.title}</h3>
+                  <p>{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card credibility-card">
+            <span className="card-eyebrow">Protocol credibility</span>
+            <h3>Compact design choices that keep the system legible.</h3>
+            {credibilityParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
         </section>
 
         <section className="section-shell">
           <div className="section-head">
             <span className="section-kicker">Protocol architecture</span>
-            <h2>Documentation-grade design presented in product form.</h2>
+            <h2>Reward-per-share accounting does the heavy lifting without turning the program into a maze.</h2>
             <p>
-              Ozlax is designed around compact accounts, deterministic reward settlement, and a deployment model that scales without
-              forcing harvests to iterate through every depositor.
+              Ozlax uses the familiar accumulator pattern because it solves the right problem. Harvests should stay constant-time,
+              users should settle lazily when they interact, and the account model should stay small enough to audit with confidence.
             </p>
           </div>
 
           <div className="feature-grid">
-            {architectureCards.map((card) => (
-              <FeatureCard key={card.title} {...card} />
+            {protocolFacts.map((description, index) => (
+              <FeatureCard
+                key={description}
+                eyebrow={index === 0 ? "Accounting" : index === 1 ? "Settlement" : "Treasury"}
+                title={
+                  index === 0
+                    ? "One compact program"
+                    : index === 1
+                      ? "Single accumulator updates"
+                      : "Yield-aligned fee model"
+                }
+                description={description}
+              />
             ))}
+            <FeatureCard
+              eyebrow="Deployment"
+              title="Devnet-first, mainnet-ready posture"
+              description="The live path starts on devnet because operational discipline matters. The same core design is already shaped for a clean mainnet transition when the rollout is ready."
+            />
           </div>
         </section>
 
-        <section className="section-shell token-trust-grid">
+        <section className="token-trust-grid">
           <article className="glass-card token-card">
-            <span className="section-kicker">$OZX Governance Token</span>
-            <h2>Fixed supply, clean mint posture.</h2>
-            <ul className="detail-list">
-              <li>1,000,000,000 total supply</li>
-              <li>9 decimals</li>
-              <li>Mint authority permanently revoked</li>
-              <li>Future governance utility for protocol direction and treasury policy</li>
-            </ul>
+            <span className="section-kicker">$OZX governance token</span>
+            <h2>A fixed-supply token with room to grow into governance.</h2>
+            {tokenFacts.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </article>
 
-          <article className="glass-card trust-card">
-            <span className="section-kicker">Security &amp; Trust</span>
-            <h2>Designed transparently, shipped conservatively.</h2>
-            <ul className="detail-list">
-              <li>MVP status is clearly disclosed: this protocol is still pre-audit.</li>
-              <li>Open source code is published on GitHub.</li>
-              <li>The fee model is fixed and transparent at 10% of harvested yield.</li>
-              <li>Compact account design helps minimize rent overhead and keeps state easy to inspect.</li>
-            </ul>
+          <article className="glass-card trust-card" id="security">
+            <span className="section-kicker">Security and trust</span>
+            <h2>Clear on the design, honest about the current stage.</h2>
+            <p>
+              Ozlax is still an MVP and should be treated that way. The protocol is open source, the fee model is easy to inspect, and
+              the account design stays compact to keep rent costs and attack surface lower.
+            </p>
+            <p>
+              That does not replace a professional audit. It does mean the design is being built in public with choices that are easier
+              to verify than a sprawling program full of hidden branches.
+            </p>
           </article>
         </section>
 
-        <section className="section-shell community-shell" id="community">
+        <section className="section-shell credibility-shell">
+          <div className="section-head">
+            <span className="section-kicker">Protocol credibility</span>
+            <h2>Built like infrastructure, explained like infrastructure.</h2>
+          </div>
+
+          <div className="credibility-grid">
+            <article className="glass-card credibility-panel">
+              <h3>One-program design</h3>
+              <p>
+                Ozlax keeps the program surface intentionally small. That makes deploys, reads, and future review work more manageable
+                than a fragmented architecture that spreads state across too many moving pieces.
+              </p>
+            </article>
+            <article className="glass-card credibility-panel">
+              <h3>Treasury model</h3>
+              <p>
+                The treasury only grows when the protocol harvests real yield. That is a cleaner relationship with users than charging
+                fees on entry or quietly clipping principal through hidden mechanics.
+              </p>
+            </article>
+            <article className="glass-card credibility-panel">
+              <h3>Devnet-first rollout</h3>
+              <p>
+                The current posture is deliberate. Ozlax is proving the program, the scripts, the keeper, and the interface end to end
+                before it asks anyone to treat the system like finished infrastructure.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="community" className="section-shell community-shell">
           <div className="section-head">
             <span className="section-kicker">Community</span>
-            <h2>Follow the protocol as it moves from devnet toward production.</h2>
-            <p>Join the operator channels, follow product updates, and track protocol progress in public.</p>
+            <h2>Follow the build in public.</h2>
+            <p>
+              Ozlax is being shipped in the open. If you want to watch the protocol mature, track deployments, and talk directly to the
+              people building it, these are the places to do it.
+            </p>
           </div>
 
           <div className="community-icon-grid">
-            {communityLinks.map((link) => (
-              <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="community-link-card">
-                <Icon>{link.icon}</Icon>
-                <span>{link.label}</span>
+            {communityLinks.map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="community-link-card">
+                <Icon>{item.icon}</Icon>
+                <div>
+                  <strong>{item.label}</strong>
+                  <p>{item.description}</p>
+                </div>
               </a>
             ))}
           </div>
