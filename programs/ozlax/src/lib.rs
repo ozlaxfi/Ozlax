@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
 
-declare_id!("9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW");
+declare_id!("BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx");
 
 const ACC_PRECISION: u128 = 1_000_000_000_000;
 const MIN_DEPOSIT_LAMPORTS: u64 = 10_000_000;

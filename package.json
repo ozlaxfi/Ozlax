@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "build": "npm run build:app",
-    "test:anchor": "anchor test --skip-build",
+    "test:anchor": "anchor test --provider.cluster localnet",
     "build:anchor": "anchor build",
     "build:app": "npm run build --workspace @ozlax/app",
     "vercel-build": "npm run build --workspace @ozlax/app",
