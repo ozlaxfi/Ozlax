@@ -116,7 +116,12 @@ fi
 section "Vault verification"
 solana account "$vault_pda" --url "$HELIUS_RPC_URL" >/dev/null
 
+section "State verification"
+tsx scripts/verify-deploy.ts
+
 section "Deploy complete"
+echo "  RPC:        $HELIUS_RPC_URL"
+echo "  Treasury:   $TREASURY_WALLET"
 echo "  Program ID: $PROGRAM_ID"
 echo "  Vault PDA:  $vault_pda"
 echo "  Init tx:    $init_tx"

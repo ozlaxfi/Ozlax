@@ -237,6 +237,16 @@ export const runHarvest = async () => {
 };
 
 export const main = async () => {
+  const provider = getProvider();
+  const program = getProgram(provider);
+  const [vaultPda] = PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId);
+
+  log(`Keeper RPC: ${provider.connection.rpcEndpoint}`);
+  log(`Keeper authority: ${provider.wallet.publicKey.toBase58()}`);
+  log(`Keeper program ID: ${program.programId.toBase58()}`);
+  log(`Keeper vault PDA: ${vaultPda.toBase58()}`);
+  log("Keeper harvest mode: APY-fetched daily simulation with protocol fee applied on-chain.");
+
   cron.schedule("0 0 * * *", async () => {
     await runHarvest();
   });

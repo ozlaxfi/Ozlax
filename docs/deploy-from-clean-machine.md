@@ -86,12 +86,14 @@ export OZX_MINT=<OZX_MINT>
 ## 6. Verify frontend and keeper readiness
 
 ```bash
+npm run verify:deploy
 npm run typecheck
 npm run build
 ```
 
 Confirm:
 
+- `npm run verify:deploy` prints the deployed program, vault PDA, treasury, fee, allocation, and frontend env alignment
 - dashboard loads with devnet config
 - vault fallback disappears after initialization
 - keeper has `PROGRAM_ID`, `HELIUS_RPC_URL`, `KEEPER_KEYPAIR_PATH`, and `DISCORD_WEBHOOK_URL` set before running

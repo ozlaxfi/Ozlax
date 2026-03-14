@@ -61,7 +61,7 @@ export const useOzlax = () => {
       setIsFallback(usingFallback);
       setStatusNote(
         usingFallback
-          ? "Vault state is not initialized on the current cluster yet. The dashboard is showing a protocol preview so the interface stays usable."
+          ? "Vault state is not available on the current RPC yet. The dashboard is showing a protocol preview so the interface stays usable while the vault is uninitialized or the frontend program config is still pointed at preview values."
           : "Vault state loaded from chain.",
       );
 

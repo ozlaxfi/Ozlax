@@ -13,7 +13,8 @@
     "vercel-build": "npm run build --workspace @ozlax/app",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace @ozlax/app",
     "keeper": "ts-node keeper/bot.ts",
-    "initialize:vault": "ts-node scripts/initialize-vault.ts"
+    "initialize:vault": "ts-node scripts/initialize-vault.ts",
+    "verify:deploy": "ts-node scripts/verify-deploy.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
