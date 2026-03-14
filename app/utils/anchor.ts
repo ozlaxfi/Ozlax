@@ -2,7 +2,7 @@ import { AnchorProvider, Idl, Program } from "@coral-xyz/anchor";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 
-const PLACEHOLDER_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
+const PLACEHOLDER_PROGRAM_ID = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx";
 
 const programIdValue = (
   process.env.NEXT_PUBLIC_PROGRAM_ID ||

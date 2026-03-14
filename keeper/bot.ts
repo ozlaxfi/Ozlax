@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
-const PLACEHOLDER_PROGRAM_ID = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW";
+const PLACEHOLDER_PROGRAM_ID = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx";
 const MARINADE_FALLBACK_APY = 0.072;
 const JITO_FALLBACK_APY = 0.081;
 

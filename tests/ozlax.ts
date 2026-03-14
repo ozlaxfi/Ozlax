@@ -11,6 +11,7 @@ describe("ozlax", () => {
   const authority = provider.wallet as anchor.Wallet;
   const treasury = Keypair.generate();
   const user = Keypair.generate();
+  const nonAuthority = Keypair.generate();
 
   const [vaultPda] = PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId);
   const [userPositionPda] = PublicKey.findProgramAddressSync(
@@ -29,10 +30,24 @@ describe("ozlax", () => {
   const totalYield = marinadeYield.add(jitoYield);
   const expectedFee = totalYield.mul(new BN(1_000)).div(new BN(10_000));
   const expectedDistributable = totalYield.sub(expectedFee);
+  const rewardPrecision = new BN("1000000000000");
 
   const airdrop = async (pubkey: PublicKey, amountSol = 2) => {
     const sig = await provider.connection.requestAirdrop(pubkey, amountSol * LAMPORTS_PER_SOL);
     await provider.connection.confirmTransaction(sig, "confirmed");
+  };
+
+  const expectFailure = async (callback: () => Promise<unknown>, expectedPattern: RegExp) => {
+    let message = "";
+
+    try {
+      await callback();
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+
+    assert.ok(message, `expected failure matching ${expectedPattern}`);
+    assert.match(message, expectedPattern);
   };
 
   const pendingYieldLamports = async () => {
@@ -49,6 +64,7 @@ describe("ozlax", () => {
     await airdrop(authority.publicKey, 3);
     await airdrop(user.publicKey, 2);
     await airdrop(treasury.publicKey, 1);
+    await airdrop(nonAuthority.publicKey, 1);
   });
 
   it("initializes vault with a 10% fee", async () => {
@@ -154,5 +170,124 @@ describe("ozlax", () => {
     );
     assert.equal(vault.totalDeposited.toString(), depositLamports.sub(withdrawLamports).toString());
     assert.equal(userPosition.yieldEarnedClaimed.toString(), expectedDistributable.toString());
+  });
+
+  it("rejects deposit below minimum (0.01 SOL)", async () => {
+    await expectFailure(
+      () =>
+        program.methods
+          .deposit(new BN(1_000))
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: user.publicKey,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([user])
+          .rpc(),
+      /DepositTooSmall/,
+    );
+  });
+
+  it("rejects withdraw of more than deposited", async () => {
+    await expectFailure(
+      () =>
+        program.methods
+          .withdraw(new BN(LAMPORTS_PER_SOL))
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: user.publicKey,
+          })
+          .signers([user])
+          .rpc(),
+      /InsufficientDeposit/,
+    );
+  });
+
+  it("rejects harvest from non-authority", async () => {
+    await expectFailure(
+      () =>
+        program.methods
+          .harvestYield(new BN(1), new BN(1))
+          .accounts({
+            vault: vaultPda,
+            authority: nonAuthority.publicKey,
+            treasury: treasury.publicKey,
+          })
+          .signers([nonAuthority])
+          .rpc(),
+      /(Unauthorized|Constraint)/,
+    );
+  });
+
+  it("rejects claim when no yield pending", async () => {
+    await expectFailure(
+      () =>
+        program.methods
+          .claimYield()
+          .accounts({
+            vault: vaultPda,
+            userPosition: userPositionPda,
+            user: user.publicKey,
+          })
+          .signers([user])
+          .rpc(),
+      /NoYieldAvailable/,
+    );
+  });
+
+  it("handles second deposit correctly", async () => {
+    const secondDepositLamports = withdrawLamports;
+    const before = (await program.account.userPosition.fetch(userPositionPda)) as any;
+
+    await program.methods
+      .deposit(secondDepositLamports)
+      .accounts({
+        vault: vaultPda,
+        userPosition: userPositionPda,
+        user: user.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([user])
+      .rpc();
+
+    const after = (await program.account.userPosition.fetch(userPositionPda)) as any;
+    const vault = (await program.account.vaultState.fetch(vaultPda)) as any;
+    const expectedDeposited = depositLamports;
+    const expectedRewardDebt = expectedDeposited.mul(new BN(vault.accYieldPerShare.toString())).div(rewardPrecision);
+
+    assert.equal(after.depositedAmount.toString(), expectedDeposited.toString());
+    assert.ok(new BN(after.rewardDebt.toString()).gt(new BN(before.rewardDebt.toString())));
+    assert.equal(after.rewardDebt.toString(), expectedRewardDebt.toString());
+  });
+
+  it("rebalance updates allocation", async () => {
+    await program.methods
+      .rebalance(60, 40)
+      .accounts({
+        vault: vaultPda,
+        authority: authority.publicKey,
+      })
+      .rpc();
+
+    const vault = (await program.account.vaultState.fetch(vaultPda)) as any;
+    assert.equal(vault.marinadePct, 60);
+    assert.equal(vault.jitoPct, 40);
+    assert.equal(vault.marinadePct + vault.jitoPct, 100);
+  });
+
+  it("rejects invalid rebalance (sum != 100)", async () => {
+    await expectFailure(
+      () =>
+        program.methods
+          .rebalance(60, 50)
+          .accounts({
+            vault: vaultPda,
+            authority: authority.publicKey,
+          })
+          .rpc(),
+      /InvalidAllocation/,
+    );
   });
 });

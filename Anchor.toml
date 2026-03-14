@@ -3,11 +3,11 @@ seeds = true
 
 # Replace this placeholder after the first real devnet deploy.
 [programs.devnet]
-ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
+ozlax = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx"
 
 # Keep this aligned with the deployed upgradeable program on mainnet.
 [programs.mainnet]
-ozlax = "9W7SdAuyoHwg1F8Mn8tuGJhGpwp7YGi3Vt6t9CcBFSSW"
+ozlax = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx"
 
 [provider]
 cluster = "devnet"

@@ -6,6 +6,8 @@ import { readFileSync } from "fs";
 import path from "path";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
+const DEFAULT_PROGRAM_ID = "BSaLVpWMCC6sjuyy4D1r8UHFQ2xc9LXNSeHBZqbjguyx";
+
 const requireEnv = (name: string) => {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -52,7 +54,7 @@ const main = async () => {
     throw new Error("HELIUS_RPC_URL or NEXT_PUBLIC_RPC_URL must be set before initializing the vault.");
   }
 
-  const programId = new PublicKey(requireEnv("PROGRAM_ID"));
+  const programId = new PublicKey((process.env.PROGRAM_ID || DEFAULT_PROGRAM_ID).trim());
   const treasury = new PublicKey((process.env.TREASURY_WALLET || payer.publicKey.toBase58()).trim());
   const ozxMint = new PublicKey((process.env.OZX_MINT || payer.publicKey.toBase58()).trim());
   const connection = new Connection(rpcUrl, "confirmed");
