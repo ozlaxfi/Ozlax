@@ -1,3 +1,4 @@
+import Skeleton from "./Skeleton";
 import { HeliusTransaction } from "../utils/helius";
 import {
   formatCompactSol,
@@ -42,14 +43,25 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
   const marinadePct = ozlax.vaultState?.marinadePct ?? null;
   const jitoPct = ozlax.vaultState?.jitoPct ?? null;
   const lastHarvestSlot = ozlax.vaultState?.lastHarvestSlot ?? null;
+  const showSkeleton = ozlax.isRefreshing && !ozlax.vaultState;
+
+  const renderMetric = (label: string, value: string, tone?: "accent" | "positive") =>
+    showSkeleton ? (
+      <article className={`glass-card metric-card${tone ? ` metric-card-${tone}` : ""}`} key={label}>
+        <span>{label}</span>
+        <Skeleton height="1.55rem" width="72%" />
+      </article>
+    ) : (
+      metric(label, value, tone)
+    );
 
   return (
     <div className="dashboard-stack">
       <div className="metrics-grid">
-        {metric("Your Deposited SOL", formatSol(deposited), "accent")}
-        {metric("Pending Yield", formatSol(ozlax.pendingYield), "positive")}
-        {metric("Total Claimed", formatSol(claimed))}
-        {metric("Protocol TVL", formatCompactSol(ozlax.tvl))}
+        {renderMetric("Your Deposited SOL", formatSol(deposited), "accent")}
+        {renderMetric("Pending Yield", formatSol(ozlax.pendingYield), "positive")}
+        {renderMetric("Total Claimed", formatSol(claimed))}
+        {renderMetric("Protocol TVL", formatCompactSol(ozlax.tvl))}
       </div>
 
       <div className="dashboard-detail-grid">
@@ -66,30 +78,41 @@ export default function YieldDashboard({ ozlax, walletAddress, transactions, hel
             </div>
 
             <div className="status-grid">
-              <div>
-                <span>Weighted APY</span>
-                <strong>{formatPercent(ozlax.weightedApy)}</strong>
-              </div>
-              <div>
-                <span>Fee rate</span>
-                <strong>{formatWholePercent(feeBps / 100)}</strong>
-              </div>
-              <div>
-                <span>Marinade allocation</span>
-                <strong>{formatWholePercent(marinadePct)}</strong>
-              </div>
-              <div>
-                <span>Jito allocation</span>
-                <strong>{formatWholePercent(jitoPct)}</strong>
-              </div>
-              <div>
-                <span>Last harvest slot</span>
-                <strong>{formatSlot(lastHarvestSlot)}</strong>
-              </div>
-              <div>
-                <span>Connected wallet</span>
-                <strong>{walletAddress ? shortenAddress(walletAddress) : "Connect wallet"}</strong>
-              </div>
+              {showSkeleton ? (
+                [...Array(6)].map((_, index) => (
+                  <div key={`status-skeleton-${index}`}>
+                    <span>Loading</span>
+                    <Skeleton height="1.1rem" width={index % 2 === 0 ? "68%" : "84%"} />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div>
+                    <span>Weighted APY</span>
+                    <strong>{formatPercent(ozlax.weightedApy)}</strong>
+                  </div>
+                  <div>
+                    <span>Fee rate</span>
+                    <strong>{formatWholePercent(feeBps / 100)}</strong>
+                  </div>
+                  <div>
+                    <span>Marinade allocation</span>
+                    <strong>{formatWholePercent(marinadePct)}</strong>
+                  </div>
+                  <div>
+                    <span>Jito allocation</span>
+                    <strong>{formatWholePercent(jitoPct)}</strong>
+                  </div>
+                  <div>
+                    <span>Last harvest slot</span>
+                    <strong>{formatSlot(lastHarvestSlot)}</strong>
+                  </div>
+                  <div>
+                    <span>Connected wallet</span>
+                    <strong>{walletAddress ? shortenAddress(walletAddress) : "Connect wallet"}</strong>
+                  </div>
+                </>
+              )}
             </div>
 
             <p className="supporting-copy">

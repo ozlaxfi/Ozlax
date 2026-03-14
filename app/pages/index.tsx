@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
+import BackToTopButton from "../components/BackToTopButton";
+import FaqSection from "../components/FaqSection";
 import FeatureCard from "../components/FeatureCard";
 import Layout from "../components/Layout";
 import { SOCIAL_LINKS, SocialIcon } from "../components/SocialIcons";
@@ -124,8 +127,13 @@ const credibilityParagraphs = [
 
 export default function HomePage() {
   const ozlax = useOzlax();
+  const [mounted, setMounted] = useState(false);
   const marinadeAllocation = ozlax.vaultState?.marinadePct ?? strategyCards[0].allocation;
   const jitoAllocation = ozlax.vaultState?.jitoPct ?? strategyCards[1].allocation;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Layout>
@@ -436,6 +444,8 @@ export default function HomePage() {
           </div>
         </section>
 
+        <FaqSection />
+
         <section id="community" className="section-shell community-shell">
           <div className="section-head">
             <span className="section-kicker">Community</span>
@@ -466,6 +476,8 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {mounted ? <BackToTopButton /> : null}
       </section>
     </Layout>
   );

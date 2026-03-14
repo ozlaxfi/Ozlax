@@ -42,8 +42,8 @@ function Icon({ children }: PropsWithChildren) {
 
 export default function Layout({
   children,
-  title = "Ozlax | Micro-Staking Yield Aggregator on Solana",
-  description = "Deposit SOL into the Ozlax vault and earn optimized micro-staking yield across Marinade and Jito with transparent protocol fees.",
+  title = "Ozlax — Micro-Staking Yield Aggregator on Solana",
+  description = "Deposit SOL. Earn optimized yield across Marinade and Jito. Automatically.",
 }: LayoutProps) {
   const router = useRouter();
   const canonicalPath = router.asPath.split("#")[0];
@@ -63,7 +63,8 @@ export default function Layout({
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content="https://www.ozlax.com/logo.svg" />
-        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="@OzlaxHQ" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content="https://www.ozlax.com/logo.svg" />
