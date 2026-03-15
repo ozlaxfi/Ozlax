@@ -44,6 +44,8 @@ export const getNetworkLabel = (network: OzlaxNetwork) => {
   return "Unknown Network";
 };
 
+export const hasPublicExplorer = (network: OzlaxNetwork) => network === "devnet" || network === "mainnet-beta";
+
 export const explorerTxUrl = (signature: string, endpoint?: string | null) => {
   const network = resolveNetwork(endpoint);
 
@@ -53,11 +55,8 @@ export const explorerTxUrl = (signature: string, endpoint?: string | null) => {
   if (network === "devnet") {
     return `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
   }
-  if (network === "localnet") {
-    return `https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=${encodeURIComponent("http://localhost:8899")}`;
-  }
 
-  return `https://explorer.solana.com/tx/${signature}`;
+  return null;
 };
 
 export const explorerAddressUrl = (address: string, endpoint?: string | null) => {
@@ -69,9 +68,6 @@ export const explorerAddressUrl = (address: string, endpoint?: string | null) =>
   if (network === "devnet") {
     return `https://explorer.solana.com/address/${address}?cluster=devnet`;
   }
-  if (network === "localnet") {
-    return `https://explorer.solana.com/address/${address}?cluster=custom&customUrl=${encodeURIComponent("http://localhost:8899")}`;
-  }
 
-  return `https://explorer.solana.com/address/${address}`;
+  return null;
 };

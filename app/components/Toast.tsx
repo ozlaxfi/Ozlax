@@ -26,22 +26,30 @@ const explorerUrl = (signature: string) => explorerTxUrl(signature, getRpcEndpoi
 function ToastViewport({ toasts, removeToast }: { toasts: ToastItem[]; removeToast: (id: number) => void }) {
   return (
     <div className="toast-viewport" aria-live="polite" aria-atomic="false">
-      {toasts.map((toast) => (
-        <article key={toast.id} className={`toast toast-${toast.tone}`} role="status">
-          <div className="toast-head">
-            <strong>{toast.title}</strong>
-            <button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => removeToast(toast.id)}>
-              <span aria-hidden="true">x</span>
-            </button>
-          </div>
-          <p>{toast.message}</p>
-          {toast.signature ? (
-            <Link href={explorerUrl(toast.signature)} target="_blank" rel="noopener noreferrer" className="toast-link">
-              View transaction {toast.signature.slice(0, 4)}...{toast.signature.slice(-4)}
-            </Link>
-          ) : null}
-        </article>
-      ))}
+      {toasts.map((toast) => {
+        const signatureUrl = toast.signature ? explorerUrl(toast.signature) : null;
+
+        return (
+          <article key={toast.id} className={`toast toast-${toast.tone}`} role="status">
+            <div className="toast-head">
+              <strong>{toast.title}</strong>
+              <button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => removeToast(toast.id)}>
+                <span aria-hidden="true">x</span>
+              </button>
+            </div>
+            <p>{toast.message}</p>
+            {toast.signature && signatureUrl ? (
+              <Link href={signatureUrl} target="_blank" rel="noopener noreferrer" className="toast-link">
+                View transaction {toast.signature.slice(0, 4)}...{toast.signature.slice(-4)}
+              </Link>
+            ) : toast.signature ? (
+              <span className="toast-link toast-link-muted">
+                Signature {toast.signature.slice(0, 4)}...{toast.signature.slice(-4)}
+              </span>
+            ) : null}
+          </article>
+        );
+      })}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import SettingsPanel from "../components/SettingsPanel";
 import WithdrawForm from "../components/WithdrawForm";
 import YieldDashboard from "../components/YieldDashboard";
 import { useOzlax } from "../hooks/useOzlax";
-import { fetchWalletTransactions, HeliusTransaction, isHeliusConfigured } from "../utils/helius";
+import { fetchWalletTransactions, HeliusTransaction, WalletActivityResult } from "../utils/helius";
 import { getNetworkLabel, resolveNetwork } from "../utils/network";
 
 function EmptyStateIcon({ kind }: { kind: "vault" | "yield" }) {
@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const ozlax = useOzlax();
   const [transactions, setTransactions] = useState<HeliusTransaction[]>([]);
   const [activityMessage, setActivityMessage] = useState("");
+  const [activitySource, setActivitySource] = useState<WalletActivityResult["source"]>("unavailable");
   const network = resolveNetwork(connection.rpcEndpoint);
   const networkLabel = getNetworkLabel(network);
 
@@ -46,18 +47,14 @@ export default function DashboardPage() {
       if (!wallet.publicKey) {
         setTransactions([]);
         setActivityMessage("Connect your wallet to see the most recent activity tied to this address.");
+        setActivitySource("unavailable");
         return;
       }
 
-      if (!isHeliusConfigured()) {
-        setTransactions([]);
-        setActivityMessage("Transaction history requires a Helius API key.");
-        return;
-      }
-
-      const items = await fetchWalletTransactions(wallet.publicKey.toBase58(), connection.rpcEndpoint);
-      setTransactions(items.slice(0, 10));
-      setActivityMessage(items.length ? "" : "No recent activity.");
+      const result = await fetchWalletTransactions(wallet.publicKey.toBase58(), connection.rpcEndpoint);
+      setTransactions(result.items.slice(0, 10));
+      setActivitySource(result.source);
+      setActivityMessage(result.message);
     };
 
     void loadTransactions();
@@ -108,7 +105,7 @@ export default function DashboardPage() {
               The dashboard is ready to use. Once your wallet is connected on the right network, Ozlax can read your position and send
               real deposit, withdrawal, and claim transactions through the vault.
             </p>
-            <ConnectWallet className="wallet-button-large" />
+            <ConnectWallet className="wallet-button-large" showHint />
           </div>
         )}
 
@@ -119,7 +116,7 @@ export default function DashboardPage() {
           ozlax={ozlax}
           walletAddress={wallet.publicKey?.toBase58()}
           transactions={transactions}
-          heliusConfigured={isHeliusConfigured()}
+          activitySource={activitySource}
           activityMessage={activityMessage}
           rpcEndpoint={connection.rpcEndpoint}
         />
@@ -170,7 +167,12 @@ export default function DashboardPage() {
           />
         </div>
 
-        <SettingsPanel walletAddress={wallet.publicKey?.toBase58()} />
+        <SettingsPanel
+          walletAddress={wallet.publicKey?.toBase58()}
+          previewReason={ozlax.previewReason}
+          activitySource={activitySource}
+          activityMessage={activityMessage}
+        />
       </section>
     </Layout>
   );

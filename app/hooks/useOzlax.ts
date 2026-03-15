@@ -4,6 +4,7 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 
 import { getProgram } from "../utils/anchor";
+import { OzlaxNetwork, resolveNetwork } from "../utils/network";
 
 const MIN_DEPOSIT_SOL = 0.01;
 const MARINADE_ESTIMATED_APY = 0.072;
@@ -59,6 +60,70 @@ const describeError = (error: unknown) => {
   return message;
 };
 
+const previewCopyForNetwork = (network: OzlaxNetwork, walletConnected: boolean) => {
+  if (network === "localnet") {
+    return {
+      previewReason: "Connected to localnet. Start the local validator and initialize the vault to read local development state here.",
+      statusNote: walletConnected
+        ? "Connected to localnet. The dashboard will read live development data as soon as the local vault is initialized."
+        : "Connect a wallet to inspect the local development vault once the validator is running.",
+    };
+  }
+
+  if (network === "mainnet-beta") {
+    return {
+      previewReason: "Ozlax is not deployed on mainnet-beta yet. Showing preview values instead of pretending live data exists.",
+      statusNote: "Mainnet support is not live yet, so the dashboard is staying in preview mode on this network.",
+    };
+  }
+
+  if (network === "devnet") {
+    return {
+      previewReason: "Live devnet vault data is not available yet. Showing preview values until the first real deployment lands.",
+      statusNote: walletConnected
+        ? "Devnet deployment is still pending funding, so wallet actions stay disabled while the dashboard shows preview state."
+        : "Connect a wallet on devnet and the dashboard will be ready as soon as the live vault is deployed.",
+    };
+  }
+
+  return {
+    previewReason: "This RPC is not currently serving an Ozlax vault. Showing preview values while the dashboard waits for a compatible deployment.",
+    statusNote: "Switch to devnet or localnet if you want a known Ozlax environment.",
+  };
+};
+
+const rpcIssueCopyForNetwork = (network: OzlaxNetwork) => {
+  if (network === "localnet") {
+    return {
+      error: "Localnet RPC is unreachable right now. Start solana-test-validator before trying to read development state.",
+      previewReason: "Connected to localnet, but the local validator is not responding yet.",
+      statusNote: "Local development state is unavailable until the validator comes back online.",
+    };
+  }
+
+  if (network === "mainnet-beta") {
+    return {
+      error: "The selected mainnet RPC is unreachable right now.",
+      previewReason: "Mainnet is currently unreachable from this frontend session, so the dashboard is falling back to preview mode.",
+      statusNote: "Check the RPC connection and try again once the network is reachable.",
+    };
+  }
+
+  if (network === "devnet") {
+    return {
+      error: "The selected devnet RPC is unreachable right now.",
+      previewReason: "Devnet is currently unreachable from this frontend session, so the dashboard is falling back to preview mode.",
+      statusNote: "Check the RPC connection and try again once devnet responds again.",
+    };
+  }
+
+  return {
+    error: "The selected RPC is unreachable right now.",
+    previewReason: "This custom RPC is not responding, so the dashboard is staying in preview mode.",
+    statusNote: "Reconnect to a working RPC if you want live Ozlax data.",
+  };
+};
+
 export const useOzlax = () => {
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -90,6 +155,7 @@ export const useOzlax = () => {
   const refresh = async () => {
     setIsRefreshing(true);
     setError("");
+    const network = resolveNetwork(connection.rpcEndpoint);
 
     try {
       const { program, vaultPda, userPositionPda } = getPdas();
@@ -102,12 +168,13 @@ export const useOzlax = () => {
       }
 
       if (!nextVaultState) {
+        const previewCopy = previewCopyForNetwork(network, Boolean(wallet.publicKey));
         setVaultState(null);
         setTvl(null);
         setWeightedApy(null);
         setIsPreview(true);
-        setPreviewReason("The selected RPC is not serving a live Ozlax vault right now.");
-        setStatusNote("Switch to the network where Ozlax is deployed if you want live vault state and transactions.");
+        setPreviewReason(previewCopy.previewReason);
+        setStatusNote(previewCopy.statusNote);
         setUserPosition(null);
         setPendingYield(0);
       } else {
@@ -118,7 +185,11 @@ export const useOzlax = () => {
         );
         setIsPreview(false);
         setPreviewReason("");
-        setStatusNote("Live vault state loaded from chain.");
+        setStatusNote(
+          network === "localnet"
+            ? "Connected to localnet. Dashboard is reading local development state."
+            : `Live ${network === "devnet" ? "devnet" : "vault"} state loaded from chain.`,
+        );
 
         if (wallet.publicKey) {
           try {
@@ -149,10 +220,11 @@ export const useOzlax = () => {
         setWalletBalance(null);
       }
     } catch (refreshError) {
-      setError(describeError(refreshError));
-      setStatusNote("Ozlax could not read vault state from the selected RPC. Check the network and try again.");
+      const rpcCopy = rpcIssueCopyForNetwork(network);
+      setError(rpcCopy.error || describeError(refreshError));
+      setStatusNote(rpcCopy.statusNote);
       setIsPreview(true);
-      setPreviewReason("The selected RPC is not returning live Ozlax state right now.");
+      setPreviewReason(rpcCopy.previewReason);
       setVaultState(null);
       setTvl(null);
       setWeightedApy(null);
@@ -173,7 +245,7 @@ export const useOzlax = () => {
       return "Connect a wallet to interact with the vault.";
     }
     if (isPreview || !vaultState) {
-      return "Switch to the network where Ozlax is deployed if you want to interact with the live vault.";
+      return previewReason || "Live vault interaction is not available on this network yet.";
     }
 
     return null;

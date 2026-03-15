@@ -27,7 +27,7 @@ type Props = {
   ozlax: OzlaxState;
   walletAddress?: string;
   transactions: HeliusTransaction[];
-  heliusConfigured: boolean;
+  activitySource: "helius" | "rpc" | "unavailable";
   activityMessage: string;
   rpcEndpoint: string;
 };
@@ -57,7 +57,7 @@ export default function YieldDashboard({
   ozlax,
   walletAddress,
   transactions,
-  heliusConfigured,
+  activitySource,
   activityMessage,
   rpcEndpoint,
 }: Props) {
@@ -280,9 +280,13 @@ export default function YieldDashboard({
                       <td>{formatTimestamp(transaction.timestamp)}</td>
                       <td className="signature-cell">
                         <div className="signature-actions">
-                          <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
-                            {shortenSignature(transaction.signature)}
-                          </a>
+                          {transaction.explorerUrl ? (
+                            <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link">
+                              {shortenSignature(transaction.signature)}
+                            </a>
+                          ) : (
+                            <span className="table-link table-link-muted">{shortenSignature(transaction.signature)}</span>
+                          )}
                           <button
                             type="button"
                             className="copy-chip"
@@ -290,9 +294,11 @@ export default function YieldDashboard({
                           >
                             {copiedSignature === transaction.signature ? "Copied!" : "Copy"}
                           </button>
-                          <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link table-link-secondary">
-                            View on Explorer
-                          </a>
+                          {transaction.explorerUrl ? (
+                            <a href={transaction.explorerUrl} target="_blank" rel="noopener noreferrer" className="table-link table-link-secondary">
+                              View on Explorer
+                            </a>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -300,15 +306,16 @@ export default function YieldDashboard({
                 ) : (
                   <tr>
                     <td colSpan={4} className="table-empty">
-                      <ActivityEmptyState
-                        message={heliusConfigured ? activityMessage || "No recent activity." : "Transaction history requires a Helius API key."}
-                      />
+                      <ActivityEmptyState message={activityMessage || "No recent activity."} />
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+          {transactions.length > 0 && activitySource !== "helius" && activityMessage ? (
+            <p className="supporting-copy">{activityMessage}</p>
+          ) : null}
         </section>
       </div>
     </div>

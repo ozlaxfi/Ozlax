@@ -8,14 +8,18 @@ import { SocialIconRow } from "./SocialIcons";
 
 type Props = {
   walletAddress?: string;
+  previewReason?: string;
+  activitySource?: "helius" | "rpc" | "unavailable";
+  activityMessage?: string;
 };
 
-export default function SettingsPanel({ walletAddress }: Props) {
+export default function SettingsPanel({ walletAddress, previewReason = "", activitySource = "unavailable", activityMessage = "" }: Props) {
   const { connection } = useConnection();
   const { disconnect, disconnecting } = useWallet();
   const [copiedField, setCopiedField] = useState<"address" | "program" | null>(null);
   const network = useMemo(() => resolveNetwork(connection.rpcEndpoint), [connection.rpcEndpoint]);
   const networkLabel = getNetworkLabel(network);
+  const explorerUrl = explorerAddressUrl(walletAddress || "", connection.rpcEndpoint);
 
   if (!walletAddress) {
     return null;
@@ -63,18 +67,24 @@ export default function SettingsPanel({ walletAddress }: Props) {
         >
           {copiedField === "program" ? "Copied" : "Copy program ID"}
         </button>
-        <a
-          href={explorerAddressUrl(walletAddress, connection.rpcEndpoint)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="button-secondary"
-        >
-          View on Explorer
-        </a>
+        {explorerUrl ? (
+          <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="button-secondary">
+            View on Explorer
+          </a>
+        ) : (
+          <span className="button-secondary button-disabled-hint">Explorer unavailable on this network</span>
+        )}
         <button type="button" className="button-primary" onClick={() => void disconnect()} disabled={disconnecting}>
           {disconnecting ? "Disconnecting..." : "Disconnect wallet"}
         </button>
       </div>
+
+      {previewReason || activityMessage ? (
+        <div className="settings-hints">
+          {previewReason ? <p>{previewReason}</p> : null}
+          {activityMessage && activitySource !== "helius" ? <p>{activityMessage}</p> : null}
+        </div>
+      ) : null}
 
       <div className="settings-socials">
         <span className="field-label">Stay close to the protocol</span>
