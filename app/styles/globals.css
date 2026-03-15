@@ -511,8 +511,8 @@ img {
   display: grid;
   place-items: center;
   padding: 1.25rem;
-  background: rgba(5, 10, 18, 0.78);
-  backdrop-filter: blur(12px);
+  background: rgba(3, 8, 16, 0.9);
+  backdrop-filter: blur(22px) saturate(140%);
 }
 
 .wallet-picker {
@@ -520,6 +520,26 @@ img {
   display: grid;
   gap: 1rem;
   padding: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(17, 23, 38, 0.98), rgba(9, 14, 24, 0.98)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.wallet-picker-section {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.wallet-picker-section-label {
+  color: var(--soft);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .wallet-picker-list {
@@ -535,8 +555,8 @@ img {
   gap: 1rem;
   padding: 1rem 1.05rem;
   border-radius: 1.2rem;
-  border: 1px solid var(--border);
-  background: var(--surface-soft);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
   color: var(--text);
   text-align: left;
   transition:
@@ -547,12 +567,12 @@ img {
 
 .wallet-picker-item:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(153, 69, 255, 0.36);
-  background: var(--surface-soft-strong);
+  border-color: rgba(153, 69, 255, 0.44);
+  background: rgba(255, 255, 255, 0.075);
 }
 
 .wallet-picker-item:disabled {
-  opacity: 0.6;
+  opacity: 0.72;
   cursor: not-allowed;
 }
 
@@ -569,6 +589,7 @@ img {
 .wallet-picker-copy span {
   color: var(--muted);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .wallet-picker-state {
@@ -580,10 +601,11 @@ img {
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--soft);
   font-size: 0.78rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .wallet-picker-state-live {
@@ -2047,6 +2069,23 @@ img {
   background: rgba(20, 28, 48, 0.04);
 }
 
+:root[data-theme="light"] .wallet-picker-overlay {
+  background: rgba(237, 243, 252, 0.82);
+}
+
+:root[data-theme="light"] .wallet-picker {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 253, 0.99)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 24px 70px rgba(24, 37, 61, 0.18),
+    0 0 0 1px rgba(20, 28, 48, 0.04);
+}
+
+:root[data-theme="light"] .wallet-picker-item:hover:not(:disabled) {
+  background: rgba(20, 28, 48, 0.07);
+}
+
 .toast-viewport {
   position: fixed;
   right: 1.2rem;
@@ -2420,6 +2459,10 @@ img {
     align-self: flex-start;
   }
 
+  .wallet-picker-section-label {
+    font-size: 0.74rem;
+  }
+
   .hero-metrics,
   .protocol-stats-grid,
   .metrics-grid,
@@ -2585,6 +2628,10 @@ img {
     max-height: calc(100vh - 1.5rem);
     overflow-y: auto;
     border-radius: 1.4rem 1.4rem 1rem 1rem;
+  }
+
+  .wallet-picker-item {
+    padding: 0.95rem;
   }
 
   .header-actions {

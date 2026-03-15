@@ -13,19 +13,19 @@ type Props = {
 const preferredWalletOrder = ["Phantom", "Solflare", "Coinbase Wallet"];
 const fallbackWalletNames = ["Phantom", "Solflare", "Coinbase Wallet", "Supported wallet extension"];
 
-const availabilityCopy = (readyState: WalletReadyState) => {
+const availabilityCopy = (readyState: WalletReadyState, isTouchRuntime: boolean) => {
   if (readyState === WalletReadyState.Installed) {
     return "Detected";
   }
   if (readyState === WalletReadyState.Loadable) {
-    return "Ready";
+    return isTouchRuntime ? "Open in app" : "Mobile app";
   }
 
   return "Unavailable in this browser";
 };
 
-const canOpenWallet = (readyState: WalletReadyState) =>
-  readyState === WalletReadyState.Installed || readyState === WalletReadyState.Loadable;
+const canOpenWallet = (readyState: WalletReadyState, isTouchRuntime: boolean) =>
+  readyState === WalletReadyState.Installed || (readyState === WalletReadyState.Loadable && isTouchRuntime);
 
 const describeWalletError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
@@ -50,6 +50,7 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
   const [pickerOpen, setPickerOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isTouchRuntime, setIsTouchRuntime] = useState(false);
   const [pendingWalletName, setPendingWalletName] = useState<string | null>(null);
   const [connectedWalletName, setConnectedWalletName] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -69,8 +70,8 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
       [...wallets].sort((a, b) => {
         const aPriority = preferredWalletOrder.indexOf(a.adapter.name);
         const bPriority = preferredWalletOrder.indexOf(b.adapter.name);
-        const aAvailable = canOpenWallet(a.readyState) ? 0 : 1;
-        const bAvailable = canOpenWallet(b.readyState) ? 0 : 1;
+        const aAvailable = canOpenWallet(a.readyState, isTouchRuntime) ? 0 : 1;
+        const bAvailable = canOpenWallet(b.readyState, isTouchRuntime) ? 0 : 1;
 
         return (
           aAvailable - bAvailable ||
@@ -78,18 +79,25 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
             (bPriority === -1 ? preferredWalletOrder.length : bPriority)
         );
       }),
-    [wallets],
+    [wallets, isTouchRuntime],
   );
 
-  const availableWallets = sortedWallets.filter((entry) => canOpenWallet(entry.readyState));
+  const availableWallets = sortedWallets.filter((entry) => canOpenWallet(entry.readyState, isTouchRuntime));
   const connectInProgress = connecting || Boolean(pendingWalletName);
   const hasConfiguredWallets = sortedWallets.length > 0;
   const walletRows = hasConfiguredWallets
     ? sortedWallets.map((entry) => ({
         name: entry.adapter.name,
-        detail: canOpenWallet(entry.readyState) ? "Ready to connect" : "Unavailable in this browser",
-        available: canOpenWallet(entry.readyState),
-        status: availabilityCopy(entry.readyState),
+        detail:
+          entry.readyState === WalletReadyState.Installed
+            ? "Installed in this browser and ready to connect."
+            : entry.readyState === WalletReadyState.Loadable
+              ? isTouchRuntime
+                ? "Opens through the wallet app on this device."
+                : "This wallet only exposes an app-based flow here, so it is not treated as a primary desktop connection path."
+              : "Unavailable in this browser right now.",
+        available: canOpenWallet(entry.readyState, isTouchRuntime),
+        status: availabilityCopy(entry.readyState, isTouchRuntime),
       }))
     : fallbackWalletNames.map((name) => ({
         name,
@@ -99,9 +107,12 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
         available: false,
         status: mounted ? "Not detected" : "Checking...",
       }));
+  const connectableRows = walletRows.filter((entry) => entry.available);
+  const unavailableRows = walletRows.filter((entry) => !entry.available);
 
   useEffect(() => {
     setMounted(true);
+    setIsTouchRuntime("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
 
   useEffect(() => {
@@ -254,7 +265,7 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
           {availableWallets.length > 0
             ? "Choose a supported wallet to connect. If a wallet window is already open, wait for it to finish before clicking again."
             : mounted
-              ? "Install or open Phantom, Solflare, Coinbase Wallet, or another supported wallet extension to connect."
+              ? "Open Phantom, Solflare, Coinbase Wallet, or another supported wallet in this browser to connect."
               : "Checking this browser for supported wallets now."}
         </p>
       ) : null}
@@ -322,35 +333,64 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
               </button>
             </div>
 
-            <div className="wallet-picker-list">
-              {walletRows.map((entry) => {
-                const isPending = pendingWalletName === entry.name;
+            {connectableRows.length > 0 ? (
+              <div className="wallet-picker-section">
+                <span className="wallet-picker-section-label">Available now</span>
+                <div className="wallet-picker-list">
+                  {connectableRows.map((entry) => {
+                    const isPending = pendingWalletName === entry.name;
 
-                return (
-                  <button
-                    key={entry.name}
-                    type="button"
-                    className="wallet-picker-item"
-                    disabled={!entry.available || connectInProgress}
-                    onClick={() => void handleSelectWallet(entry.name)}
-                  >
-                    <span className="wallet-picker-copy">
-                      <strong>{entry.name}</strong>
-                      <span>{entry.detail}</span>
-                    </span>
-                    <span className={`wallet-picker-state${entry.available ? " wallet-picker-state-live" : ""}`}>
-                      {isPending ? "Connecting..." : entry.status}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                    return (
+                      <button
+                        key={entry.name}
+                        type="button"
+                        className="wallet-picker-item"
+                        disabled={connectInProgress}
+                        onClick={() => void handleSelectWallet(entry.name)}
+                      >
+                        <span className="wallet-picker-copy">
+                          <strong>{entry.name}</strong>
+                          <span>{entry.detail}</span>
+                        </span>
+                        <span className="wallet-picker-state wallet-picker-state-live">
+                          {isPending ? "Connecting..." : entry.status}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {unavailableRows.length > 0 ? (
+              <div className="wallet-picker-section">
+                <span className="wallet-picker-section-label">Unavailable in this runtime</span>
+                <div className="wallet-picker-list">
+                  {unavailableRows.map((entry) => (
+                    <button
+                      key={entry.name}
+                      type="button"
+                      className="wallet-picker-item"
+                      disabled
+                    >
+                      <span className="wallet-picker-copy">
+                        <strong>{entry.name}</strong>
+                        <span>{entry.detail}</span>
+                      </span>
+                      <span className="wallet-picker-state">
+                        {entry.status}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <p className="wallet-support-note wallet-support-note-modal">
               {availableWallets.length > 0
-                ? "Supported wallets are shown above. If a wallet is unavailable here, open the extension or app first and try again."
+                ? "Installed wallets are listed first. If a wallet appears in the unavailable section, open the extension or app first and then reopen this picker."
                 : mounted
-                  ? "No supported wallet extension is active in this browser right now. Open Phantom, Solflare, Coinbase Wallet, or another wallet-standard provider and the list will update."
+                  ? "No supported wallet extension is active in this browser right now. Open a wallet and then reopen this picker to refresh detection."
                   : "The wallet list is still loading for this browser. If no adapter appears after a moment, open a supported wallet extension and try again."}
             </p>
           </div>
