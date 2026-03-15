@@ -72,10 +72,10 @@ export default function DashboardPage() {
         <div className="dashboard-hero glass-card">
           <div>
             <span className="section-kicker">Dashboard</span>
-            <h1>Protocol controls for depositors, operators, and devnet users.</h1>
+            <h1>Protocol console for wallet state, vault routing, and reward settlement.</h1>
             <p>
-              Track your deposited SOL, pending rewards, protocol TVL, live allocation split, and recent wallet activity from a
-              single protocol surface that still makes the accounting legible.
+              Follow deposited SOL, pending rewards, vault TVL, allocation split, and recent wallet activity from one surface that
+              stays readable whether you are on localnet, devnet, or waiting on live chain state.
             </p>
           </div>
           <div className="dashboard-hero-badges">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
             <span>
               {wallet.connected
                 ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not returning live Ozlax vault data yet."
-                : "Connect a wallet on the target network to load your live Ozlax position as soon as chain data is available."}
+                : "Connect a wallet on the target network to load live Ozlax position data as soon as the vault is reachable."}
             </span>
           </div>
         )}

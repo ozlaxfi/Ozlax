@@ -318,6 +318,9 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
               <div>
                 <span className="card-eyebrow">Wallet connection</span>
                 <h3 id="wallet-picker-title">Choose a wallet</h3>
+                <p className="wallet-picker-intro">
+                  Connect with a supported Solana wallet to read live Ozlax vault state and sign deposit, withdrawal, and claim transactions.
+                </p>
               </div>
               <button
                 type="button"
@@ -335,7 +338,10 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
 
             {connectableRows.length > 0 ? (
               <div className="wallet-picker-section">
-                <span className="wallet-picker-section-label">Available now</span>
+                <div className="wallet-picker-section-head">
+                  <span className="wallet-picker-section-label">Available now</span>
+                  <span className="wallet-picker-section-count">{connectableRows.length}</span>
+                </div>
                 <div className="wallet-picker-list">
                   {connectableRows.map((entry) => {
                     const isPending = pendingWalletName === entry.name;
@@ -364,7 +370,10 @@ export default function ConnectWallet({ className = "", showHint = false }: Prop
 
             {unavailableRows.length > 0 ? (
               <div className="wallet-picker-section">
-                <span className="wallet-picker-section-label">Unavailable in this runtime</span>
+                <div className="wallet-picker-section-head">
+                  <span className="wallet-picker-section-label">Unavailable in this runtime</span>
+                  <span className="wallet-picker-section-count">{unavailableRows.length}</span>
+                </div>
                 <div className="wallet-picker-list">
                   {unavailableRows.map((entry) => (
                     <button

@@ -47,7 +47,8 @@ export default function FaqSection() {
         <span className="section-kicker">FAQ</span>
         <h2>Questions people ask once the vault starts to click.</h2>
         <p>
-          Ozlax is easier to trust when the mechanics are explained plainly. These answers stay close to how the protocol actually behaves today instead of drifting into vague marketing language.
+          Ozlax is easier to trust when the mechanics are explained plainly. These answers stay close to how the protocol actually
+          behaves today instead of drifting into vague marketing language.
         </p>
       </div>
 
@@ -65,7 +66,7 @@ export default function FaqSection() {
               >
                 <span>{item.question}</span>
                 <span className="faq-toggle" aria-hidden="true">
-                  {isOpen ? "−" : "+"}
+                  {isOpen ? "-" : "+"}
                 </span>
               </button>
               <div className={`faq-answer${isOpen ? " faq-answer-open" : ""}`}>

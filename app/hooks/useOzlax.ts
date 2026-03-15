@@ -79,10 +79,10 @@ const previewCopyForNetwork = (network: OzlaxNetwork, walletConnected: boolean) 
 
   if (network === "devnet") {
     return {
-      previewReason: "Live devnet vault data is not available yet. The interface remains available while the first real deployment is still pending funding.",
+      previewReason: "Live devnet vault data is not available yet. The interface stays readable while the first real vault remains pending.",
       statusNote: walletConnected
-        ? "Devnet deployment is still pending funding, so wallet actions stay disabled until the live vault is on chain."
-        : "Connect a wallet on devnet and the dashboard will be ready as soon as the live vault is deployed.",
+        ? "Devnet deployment is still pending, so wallet actions stay disabled until the live vault is on chain."
+        : "Connect a wallet on devnet and the dashboard will be ready once the live vault is deployed.",
     };
   }
 

@@ -143,10 +143,10 @@ export default function HomePage() {
             <span className="section-kicker">Micro-staking yield aggregator</span>
 
             <div>
-              <h1>Micro-Staking Yield Aggregator on Solana</h1>
+              <h1>Stake SOL once. Route yield cleanly across Solana.</h1>
               <p className="hero-subheadline">
-                Deposit SOL once and let Ozlax route the vault across Marinade and Jito, harvest the yield on cadence, and keep
-                distribution transparent from treasury fee to final user claim.
+                Ozlax routes one vault across Marinade and Jito, harvests on a keeper cadence, sends 10% of harvested yield to
+                treasury, and settles user rewards through a compact reward-per-share model.
               </p>
             </div>
 
@@ -163,7 +163,7 @@ export default function HomePage() {
               <article className="glass-card hero-metric">
                 <span>Protocol TVL</span>
                 <TVLCounter value={ozlax.tvl} />
-                <p>{ozlax.isPreview ? "Live Ozlax vault data is not available on this RPC yet." : "Live vault TVL pulled from the current RPC."}</p>
+                <p>{ozlax.isPreview ? "Live devnet vault data is not available yet." : "Vault TVL is reading from the current RPC."}</p>
               </article>
               <article className="glass-card hero-metric">
                 <span>Weighted APY</span>
