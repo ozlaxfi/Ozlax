@@ -200,13 +200,13 @@ const fetchRpcTransactions = async (address: string, rpcEndpoint?: string): Prom
       items,
       source: "rpc",
       message:
-        "Showing basic recent activity from the connected RPC. Enhanced indexing is unavailable without a Helius API key.",
+        "Showing recent activity from the connected RPC. Some transaction details are limited without enhanced indexing.",
     };
   } catch {
     return {
       items: [],
       source: "unavailable",
-      message: "Recent activity is unavailable on this RPC without enhanced indexing.",
+      message: "Recent activity is limited on this RPC right now.",
     };
   }
 };

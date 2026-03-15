@@ -134,7 +134,7 @@ export default function YieldDashboard({
                 <h3>Live protocol state</h3>
               </div>
               <span className={`status-chip${ozlax.isPreview ? " status-chip-muted" : ""}`}>
-                {ozlax.isPreview ? "Preview" : ozlax.isRefreshing ? "Refreshing" : "Live"}
+                {ozlax.isPreview ? "Read-only" : ozlax.isRefreshing ? "Refreshing" : "Live"}
               </span>
             </div>
 

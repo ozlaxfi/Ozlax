@@ -163,7 +163,7 @@ export default function HomePage() {
               <article className="glass-card hero-metric">
                 <span>Protocol TVL</span>
                 <TVLCounter value={ozlax.tvl} />
-                <p>{ozlax.isPreview ? "Switch to the live Ozlax network and the vault total will load here." : "Live vault TVL pulled from the current RPC."}</p>
+                <p>{ozlax.isPreview ? "Live Ozlax vault data is not available on this RPC yet." : "Live vault TVL pulled from the current RPC."}</p>
               </article>
               <article className="glass-card hero-metric">
                 <span>Weighted APY</span>

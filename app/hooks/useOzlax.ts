@@ -72,22 +72,22 @@ const previewCopyForNetwork = (network: OzlaxNetwork, walletConnected: boolean) 
 
   if (network === "mainnet-beta") {
     return {
-      previewReason: "Ozlax is not deployed on mainnet-beta yet. Showing preview values instead of pretending live data exists.",
-      statusNote: "Mainnet support is not live yet, so the dashboard is staying in preview mode on this network.",
+      previewReason: "No mainnet deployment is available yet. The dashboard can still show the interface, but there is no live Ozlax vault on this network.",
+      statusNote: "Mainnet support is not live yet, so this session stays read-only on mainnet-beta.",
     };
   }
 
   if (network === "devnet") {
     return {
-      previewReason: "Live devnet vault data is not available yet. Showing preview values until the first real deployment lands.",
+      previewReason: "Live devnet vault data is not available yet. The interface remains available while the first real deployment is still pending funding.",
       statusNote: walletConnected
-        ? "Devnet deployment is still pending funding, so wallet actions stay disabled while the dashboard shows preview state."
+        ? "Devnet deployment is still pending funding, so wallet actions stay disabled until the live vault is on chain."
         : "Connect a wallet on devnet and the dashboard will be ready as soon as the live vault is deployed.",
     };
   }
 
   return {
-    previewReason: "This RPC is not currently serving an Ozlax vault. Showing preview values while the dashboard waits for a compatible deployment.",
+    previewReason: "This RPC is not currently serving an Ozlax vault. The interface is available, but live vault data is not coming from this endpoint.",
     statusNote: "Switch to devnet or localnet if you want a known Ozlax environment.",
   };
 };
@@ -104,7 +104,7 @@ const rpcIssueCopyForNetwork = (network: OzlaxNetwork) => {
   if (network === "mainnet-beta") {
     return {
       error: "The selected mainnet RPC is unreachable right now.",
-      previewReason: "Mainnet is currently unreachable from this frontend session, so the dashboard is falling back to preview mode.",
+      previewReason: "Mainnet is currently unreachable from this frontend session, so live Ozlax data cannot be loaded right now.",
       statusNote: "Check the RPC connection and try again once the network is reachable.",
     };
   }
@@ -112,14 +112,14 @@ const rpcIssueCopyForNetwork = (network: OzlaxNetwork) => {
   if (network === "devnet") {
     return {
       error: "The selected devnet RPC is unreachable right now.",
-      previewReason: "Devnet is currently unreachable from this frontend session, so the dashboard is falling back to preview mode.",
+      previewReason: "Devnet is currently unreachable from this frontend session, so live Ozlax data cannot be loaded right now.",
       statusNote: "Check the RPC connection and try again once devnet responds again.",
     };
   }
 
   return {
     error: "The selected RPC is unreachable right now.",
-    previewReason: "This custom RPC is not responding, so the dashboard is staying in preview mode.",
+    previewReason: "This custom RPC is not responding, so live Ozlax data cannot be loaded from it right now.",
     statusNote: "Reconnect to a working RPC if you want live Ozlax data.",
   };
 };

@@ -91,8 +91,8 @@ export default function DashboardPage() {
             <strong>Network view</strong>
             <span>
               {wallet.connected
-                ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not returning a live Ozlax vault yet."
-                : "Connect a wallet on devnet and the live Ozlax interface will take over from there."}
+                ? ozlax.previewReason || "This wallet is connected, but the selected RPC is not returning live Ozlax vault data yet."
+                : "Connect a wallet on the target network to load your live Ozlax position as soon as chain data is available."}
             </span>
           </div>
         )}
