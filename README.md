@@ -49,6 +49,7 @@ keeper/bot.ts                 24h harvest keeper
 app/                          Next.js frontend
 scripts/deploy-token.sh       OZX mint script
 scripts/initialize-vault.ts   Vault initializer
+scripts/deploy-devnet-on-funded-wallet.sh  Funded-wallet deploy helper
 ```
 
 ## Getting Started (Local + Devnet)
@@ -87,6 +88,8 @@ bash scripts/test-full-workflow.sh
 ```
 
 That script boots a fresh validator, funds the local wallet, builds and deploys the program, initializes the vault, verifies the live state, runs the keeper in `--once --dry-run` mode, and then executes the integration suite. The test suite now covers 19 end-to-end cases, including multi-user reward distribution, repeated harvest accumulation, full-withdraw edge cases, withdraw-all settlement behavior, and a three-user rapid deposit-harvest-claim stress cycle.
+
+For the real devnet handoff, use `bash scripts/deploy-devnet-on-funded-wallet.sh` once the deploy wallet has reached the live deploy threshold. The operator checklist for manual browser funding and immediate post-funding deploy lives in `docs/manual-devnet-funding-and-deploy.md`.
 
 ### 6. Start the frontend
 

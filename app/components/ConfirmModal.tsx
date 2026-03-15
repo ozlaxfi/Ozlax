@@ -17,6 +17,9 @@ export default function ConfirmModal({ open, title, confirmLabel, loading = fals
       return;
     }
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onCancel();
@@ -24,7 +27,10 @@ export default function ConfirmModal({ open, title, confirmLabel, loading = fals
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open, onCancel]);
 
   if (!open) {
